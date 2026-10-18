@@ -7,22 +7,27 @@ page may use that colour.
 
 from pathlib import Path
 
-from reportlab.lib.colors import Color, black
+from reportlab.lib.colors import Color, HexColor
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from .cards import NUMBER_COLORS
 from .geometry import CardSpec, PageSpec, Point, card_origins, circle_centers
 
 CUT_COLOR = Color(1, 0, 0)
 CUT_LINE_WIDTH = 0.25  # points
-FILL_COLOR = black
+
+FILL_COLORS = {n: HexColor(h) for n, h in NUMBER_COLORS.items()}
+if any(color.rgb() == CUT_COLOR.rgb() for color in FILL_COLORS.values()):
+    raise ValueError("A circle fill colour matches the cut line colour")
 
 
 def draw_card(c: canvas.Canvas, card: CardSpec, origin: Point, filled: str) -> None:
     r = card.circle_radius * mm
     centers = circle_centers(card, origin)
 
-    c.setFillColor(FILL_COLOR)
+    if filled:
+        c.setFillColor(FILL_COLORS[len(filled)])
     for letter in filled:
         x, y = centers[letter]
         c.circle(x * mm, y * mm, r, stroke=0, fill=1)

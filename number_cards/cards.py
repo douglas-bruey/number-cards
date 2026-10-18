@@ -26,6 +26,20 @@ DECK: dict[str, str] = {
     "9.1": "abcdefghi",
 }
 
+# Fill colour of every filled circle on a card, keyed by how many circles
+# are filled. Card 0 has no filled circles, so it needs no colour.
+NUMBER_COLORS: dict[int, str] = {
+    1: "#000000",
+    2: "#1071e5",
+    3: "#00c2a8",
+    4: "#82755b",
+    5: "#ffe342",
+    6: "#cc4e00",
+    7: "#d916a8",
+    8: "#e81313",
+    9: "#635dff",
+}
+
 for _name, _filled in DECK.items():
     if (
         len(_filled) != int(_name.split(".")[0])
