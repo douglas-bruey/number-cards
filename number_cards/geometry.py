@@ -26,14 +26,22 @@ class PageSpec:
     width: float = 215.9
     height: float = 279.4
     # Vertical gap between the two cards.
-    card_gap: float = 10.0
+    card_gap: float = 3.0
+    # Silhouette Studio's default registration mark inset (0.625 in). Cut
+    # lines must stay inside the border this far in from every page edge.
+    registration_inset: float = 15.875
 
 
 def card_origins(page: PageSpec, card: CardSpec) -> list[Point]:
     """Bottom-left corners of the two cards, stacked vertically and centred."""
     stack_height = 2 * card.size + page.card_gap
-    if card.size > page.width or stack_height > page.height:
-        raise ValueError("Two cards do not fit on the page")
+    usable_width = page.width - 2 * page.registration_inset
+    usable_height = page.height - 2 * page.registration_inset
+    if card.size > usable_width or stack_height > usable_height:
+        raise ValueError(
+            f"Two cards ({card.size:g} x {stack_height:g} mm) do not fit inside "
+            f"the registration border ({usable_width:g} x {usable_height:g} mm)"
+        )
 
     x = (page.width - card.size) / 2
     bottom = (page.height - stack_height) / 2

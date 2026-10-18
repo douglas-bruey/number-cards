@@ -15,7 +15,9 @@ from .cards import NUMBER_COLORS
 from .geometry import CardSpec, PageSpec, Point, card_origins, circle_centers
 
 CUT_COLOR = Color(1, 0, 0)
-CUT_LINE_WIDTH = 0.25  # points
+# Studio only prints lines thicker than 0, so zero-width cut lines are cut but
+# not printed. PDF viewers still draw them as hairlines.
+CUT_LINE_WIDTH = 0  # points
 
 FILL_COLORS = {n: HexColor(h) for n, h in NUMBER_COLORS.items()}
 if any(color.rgb() == CUT_COLOR.rgb() for color in FILL_COLORS.values()):
