@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated cards
+output/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
