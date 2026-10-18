@@ -41,10 +41,19 @@ def card_origins(page: PageSpec, card: CardSpec) -> list[Point]:
     return [(x, top), (x, bottom)]
 
 
-def circle_centers(card: CardSpec, origin: Point) -> list[Point]:
+CIRCLE_LETTERS = "abcdefghi"
+
+
+def circle_centers(card: CardSpec, origin: Point) -> dict[str, Point]:
     """Centres of the 3x3 circle grid, rotated 45 degrees into a diamond.
 
-    Ordered top to bottom, then left to right.
+    Lettered top to bottom, then left to right:
+
+            a
+          b   c
+        d   e   f
+          g   h
+            i
     """
     cx = origin[0] + card.size / 2
     cy = origin[1] + card.size / 2
@@ -55,4 +64,4 @@ def circle_centers(card: CardSpec, origin: Point) -> list[Point]:
         for col in (-1, 0, 1):
             centers.append((cx + (col - row) * step, cy - (col + row) * step))
     centers.sort(key=lambda p: (-round(p[1], 6), p[0]))
-    return centers
+    return dict(zip(CIRCLE_LETTERS, centers))

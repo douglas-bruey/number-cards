@@ -1,7 +1,8 @@
-"""Render cards to a PDF page for Silhouette Studio Print & Cut.
+"""Render cards to a PDF for Silhouette Studio Print & Cut.
 
-Card outlines are the cut lines: Studio is set to "Cut by Line Color" with
-only CUT_COLOR enabled, so nothing else on the page may use that colour.
+Card outlines and the circles to be cut out are the cut lines: Studio is set
+to "Cut by Line Color" with only CUT_COLOR enabled, so nothing else on the
+page may use that colour.
 """
 
 from pathlib import Path
@@ -10,33 +11,51 @@ from reportlab.lib.colors import Color, black
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from .geometry import CardSpec, PageSpec, Point, circle_centers
+from .geometry import CardSpec, PageSpec, Point, card_origins, circle_centers
 
 CUT_COLOR = Color(1, 0, 0)
 CUT_LINE_WIDTH = 0.25  # points
-PRINT_LINE_WIDTH = 0.5  # points
+FILL_COLOR = black
 
 
-def write_pdf(path: Path, page: PageSpec, card: CardSpec, origins: list[Point]) -> None:
+def draw_card(c: canvas.Canvas, card: CardSpec, origin: Point, filled: str) -> None:
+    r = card.circle_radius * mm
+    centers = circle_centers(card, origin)
+
+    c.setFillColor(FILL_COLOR)
+    for letter in filled:
+        x, y = centers[letter]
+        c.circle(x * mm, y * mm, r, stroke=0, fill=1)
+
+    # Holes come before the outline so they are cut while the card is still
+    # held in place by the surrounding sheet.
+    c.setStrokeColor(CUT_COLOR)
+    c.setLineWidth(CUT_LINE_WIDTH)
+    for letter, (x, y) in centers.items():
+        if letter not in filled:
+            c.circle(x * mm, y * mm, r, stroke=1, fill=0)
+
+    ox, oy = origin
+    c.roundRect(
+        ox * mm,
+        oy * mm,
+        card.size * mm,
+        card.size * mm,
+        card.corner_radius * mm,
+        stroke=1,
+        fill=0,
+    )
+
+
+def write_pdf(path: Path, page: PageSpec, card: CardSpec, deck: dict[str, str]) -> None:
+    """Write the deck in order, as many cards per page as the layout holds."""
     c = canvas.Canvas(str(path), pagesize=(page.width * mm, page.height * mm))
+    origins = card_origins(page, card)
+    names = list(deck)
 
-    for ox, oy in origins:
-        c.setStrokeColor(black)
-        c.setLineWidth(PRINT_LINE_WIDTH)
-        for x, y in circle_centers(card, (ox, oy)):
-            c.circle(x * mm, y * mm, card.circle_radius * mm, stroke=1, fill=0)
+    for start in range(0, len(names), len(origins)):
+        for origin, name in zip(origins, names[start : start + len(origins)]):
+            draw_card(c, card, origin, deck[name])
+        c.showPage()
 
-        c.setStrokeColor(CUT_COLOR)
-        c.setLineWidth(CUT_LINE_WIDTH)
-        c.roundRect(
-            ox * mm,
-            oy * mm,
-            card.size * mm,
-            card.size * mm,
-            card.corner_radius * mm,
-            stroke=1,
-            fill=0,
-        )
-
-    c.showPage()
     c.save()
