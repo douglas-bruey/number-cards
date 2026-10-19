@@ -41,7 +41,7 @@ const els = {
   equationBuild: document.getElementById("equation-build"),
   equationTarget: document.getElementById("equation-target"),
   equationTargetInput: document.getElementById("equation-target-input"),
-  equationSuccess: document.getElementById("equation-success"),
+  assembleBoard: document.querySelector(".assemble-board"),
 };
 
 /** Cards still waiting to be drawn into the target slot. */
@@ -168,20 +168,40 @@ function hideEquation() {
   equationSolved = false;
   els.equationBuild.hidden = true;
   els.equationTarget.hidden = true;
-  els.equationSuccess.hidden = true;
   els.equationBuild.replaceChildren();
   els.equationTargetInput.value = "";
   els.equationTargetInput.disabled = false;
   els.equationTargetInput.classList.remove("is-correct", "is-wrong");
+  els.assembleBoard?.classList.remove("is-equation-success");
+  els.buildSlot.classList.remove("is-equation-success");
+  document
+    .querySelector(".card-slot--target")
+    ?.classList.remove("is-equation-success");
+}
+
+function expectedBuildValues() {
+  return stacked.map((name) => String(cardValue(name)));
+}
+
+/** True when `entered` is a sub-multiset of `expected`. */
+function isSubMultiset(entered, expected) {
+  const pool = [...expected];
+  for (const value of entered) {
+    const idx = pool.indexOf(value);
+    if (idx === -1) {
+      return false;
+    }
+    pool.splice(idx, 1);
+  }
+  return true;
 }
 
 function showEquation() {
   verifying = true;
   equationSolved = false;
-  els.equationSuccess.hidden = true;
   els.equationBuild.replaceChildren();
 
-  stacked.forEach((name, index) => {
+  stacked.forEach((_, index) => {
     if (index > 0) {
       const plus = document.createElement("span");
       plus.className = "equation-op";
@@ -189,8 +209,7 @@ function showEquation() {
       plus.setAttribute("aria-hidden", "true");
       els.equationBuild.appendChild(plus);
     }
-    const input = makeDigitInput(`Build card ${index + 1} value`);
-    input.dataset.expected = String(cardValue(name));
+    const input = makeDigitInput(`Addend ${index + 1}`);
     els.equationBuild.appendChild(input);
   });
 
@@ -208,22 +227,26 @@ function showEquation() {
   first?.focus();
 }
 
-function equationInputs() {
-  return [
-    ...els.equationBuild.querySelectorAll(".equation-digit"),
-    els.equationTargetInput,
-  ];
+function buildDigitInputs() {
+  return [...els.equationBuild.querySelectorAll(".equation-digit")];
 }
 
-function onEquationInput(current) {
-  if (!verifying || equationSolved) {
-    return;
-  }
+function equationInputs() {
+  return [...buildDigitInputs(), els.equationTargetInput];
+}
 
-  for (const input of equationInputs()) {
+function paintEquationState() {
+  const buildInputs = buildDigitInputs();
+  const expected = expectedBuildValues();
+  const entered = buildInputs
+    .map((input) => input.value)
+    .filter((value) => value !== "");
+
+  const buildOk = isSubMultiset(entered, expected);
+  for (const input of buildInputs) {
     if (input.value === "") {
       input.classList.remove("is-correct", "is-wrong");
-    } else if (input.value === input.dataset.expected) {
+    } else if (buildOk) {
       input.classList.add("is-correct");
       input.classList.remove("is-wrong");
     } else {
@@ -231,6 +254,44 @@ function onEquationInput(current) {
       input.classList.remove("is-correct");
     }
   }
+
+  const target = els.equationTargetInput;
+  if (target.value === "") {
+    target.classList.remove("is-correct", "is-wrong");
+  } else if (target.value === target.dataset.expected) {
+    target.classList.add("is-correct");
+    target.classList.remove("is-wrong");
+  } else {
+    target.classList.add("is-wrong");
+    target.classList.remove("is-correct");
+  }
+}
+
+function equationIsCorrect() {
+  const buildInputs = buildDigitInputs();
+  if (buildInputs.some((input) => input.value === "")) {
+    return false;
+  }
+  if (els.equationTargetInput.value === "") {
+    return false;
+  }
+  const entered = buildInputs.map((input) => input.value);
+  const expected = expectedBuildValues();
+  if (entered.length !== expected.length) {
+    return false;
+  }
+  return (
+    isSubMultiset(entered, expected) &&
+    els.equationTargetInput.value === els.equationTargetInput.dataset.expected
+  );
+}
+
+function onEquationInput(current) {
+  if (!verifying || equationSolved) {
+    return;
+  }
+
+  paintEquationState();
 
   if (current.value !== "" && current.value.length === 1) {
     const inputs = equationInputs();
@@ -240,11 +301,7 @@ function onEquationInput(current) {
     }
   }
 
-  const allFilled = equationInputs().every((input) => input.value !== "");
-  const allCorrect = equationInputs().every(
-    (input) => input.value === input.dataset.expected,
-  );
-  if (allFilled && allCorrect) {
+  if (equationIsCorrect()) {
     completeEquation();
   }
 }
@@ -259,7 +316,12 @@ function completeEquation() {
     input.classList.add("is-correct");
     input.classList.remove("is-wrong");
   }
-  els.equationSuccess.hidden = false;
+
+  els.assembleBoard?.classList.add("is-equation-success");
+  els.buildSlot.classList.add("is-equation-success");
+  document
+    .querySelector(".card-slot--target")
+    ?.classList.add("is-equation-success");
 
   const cleared = currentTarget;
   window.setTimeout(() => {

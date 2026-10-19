@@ -685,8 +685,7 @@ a {
 }
 
 .equation-build[hidden],
-.equation-target[hidden],
-.equation-success[hidden] {
+.equation-target[hidden] {
   display: none !important;
 }
 
@@ -729,14 +728,32 @@ a {
   background: rgba(201, 42, 42, 0.08);
 }
 
-.equation-success {
-  margin: 0.35rem 0 0;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 700;
+.card-slot.is-equation-success {
+  border-color: rgba(47, 158, 68, 0.75);
+  background: rgba(47, 158, 68, 0.14);
+  animation: equation-success-pulse 900ms var(--ease-out) infinite;
+}
+
+.assemble-board.is-equation-success .equation-digit {
+  border-color: rgba(47, 158, 68, 0.75);
+  background: rgba(47, 158, 68, 0.14);
+  box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.16);
+}
+
+.assemble-board.is-equation-success .equation-op {
   color: #2b8a3e;
-  animation: space-hint-in 220ms var(--ease-out);
+}
+
+@keyframes equation-success-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(47, 158, 68, 0);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(47, 158, 68, 0.12);
+  }
 }
 
 .space-hint {
