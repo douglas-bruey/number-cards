@@ -84,9 +84,6 @@
             <div class="panel assemble-board">
               <div class="assemble-status">
                 <p class="feedback" id="feedback" aria-live="assertive"></p>
-                <button type="button" class="btn btn--quiet" id="clear-btn">
-                  Clear build
-                </button>
               </div>
 
               <div class="assemble-cards">
@@ -98,6 +95,47 @@
                     data-drop="build"
                     aria-label="Build drop target"
                   >
+                    <button
+                      type="button"
+                      class="build-clear"
+                      id="clear-btn"
+                      hidden
+                      aria-label="Clear build"
+                      title="Clear build"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d="M4 7h16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                        />
+                        <path
+                          d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M7 7l1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M10 11v6M14 11v6"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                    </button>
                     <div class="card-slot__mount" id="build-mount"></div>
                   </div>
                 </div>

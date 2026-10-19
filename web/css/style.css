@@ -785,6 +785,7 @@ a {
 }
 
 .card-slot {
+  position: relative;
   width: min(280px, 100%);
   aspect-ratio: 1;
   display: grid;
@@ -797,6 +798,42 @@ a {
     border-color 160ms var(--ease-out),
     background 160ms var(--ease-out),
     transform 160ms var(--ease-out);
+}
+
+.build-clear {
+  appearance: none;
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(26, 42, 50, 0.14);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink-soft);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(26, 42, 50, 0.1);
+}
+
+.build-clear[hidden] {
+  display: none !important;
+}
+
+.build-clear svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+}
+
+.build-clear:hover,
+.build-clear:focus-visible {
+  color: #c92a2a;
+  border-color: rgba(201, 42, 42, 0.35);
+  outline: none;
 }
 
 .card-slot--target {

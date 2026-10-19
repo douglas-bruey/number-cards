@@ -101,7 +101,9 @@ function renderBuild() {
           : `Build with ${Object.keys(dots).length} dots`,
     }),
   );
-  els.buildSlot.classList.toggle("is-empty", stacked.length === 0);
+  const empty = stacked.length === 0;
+  els.buildSlot.classList.toggle("is-empty", empty);
+  els.clearBtn.hidden = empty;
 }
 
 function renderTarget() {
