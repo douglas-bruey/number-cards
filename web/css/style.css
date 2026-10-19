@@ -732,6 +732,19 @@ a {
   gap: 1rem;
 }
 
+.addends-prompt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.addends-prompt[hidden] {
+  display: none !important;
+}
+
 .addends-rows {
   display: grid;
   gap: 1.15rem;

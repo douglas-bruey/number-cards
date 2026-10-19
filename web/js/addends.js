@@ -35,6 +35,7 @@ const els = {
   palette: document.getElementById("palette"),
   rows: document.getElementById("addends-rows"),
   board: document.getElementById("addends-board"),
+  prompt: document.getElementById("addends-prompt"),
   spaceHint: document.getElementById("space-hint"),
   pendingGrid: document.getElementById("pending-grid"),
   completedGrid: document.getElementById("completed-grid"),
