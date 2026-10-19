@@ -716,32 +716,45 @@ a {
   display: none !important;
 }
 
-.cleared-tray {
+.deck-tray {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.85rem;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-panel);
   border: 1px solid rgba(26, 42, 50, 0.08);
   background: rgba(255, 255, 255, 0.55);
 }
 
-.cleared-tray[hidden] {
-  display: none !important;
+.deck-row {
+  display: grid;
+  gap: 0.45rem;
+  min-height: 4.75rem;
 }
 
-.cleared-grid {
+.deck-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
   gap: 0.5rem;
+  align-items: start;
 }
 
-.cleared-card {
+.deck-grid:empty::after {
+  content: "None yet";
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.deck-card {
   display: grid;
   place-items: center;
   animation: space-hint-in 280ms var(--ease-out);
 }
 
-.cleared-card__svg {
+.deck-card--done {
+  opacity: 0.92;
+}
+
+.deck-card__svg {
   width: 100%;
   height: auto;
   overflow: visible;

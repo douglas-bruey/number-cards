@@ -114,14 +114,23 @@
               </svg>
             </div>
 
-            <section
-              class="cleared-tray"
-              id="cleared-tray"
-              aria-label="Cleared target cards"
-              hidden
-            >
-              <h2 class="assemble-label">Cleared</h2>
-              <div class="cleared-grid" id="cleared-grid"></div>
+            <section class="deck-tray" aria-label="Challenge deck progress">
+              <div class="deck-row">
+                <h2 class="assemble-label">To build</h2>
+                <div
+                  class="deck-grid"
+                  id="pending-grid"
+                  aria-label="Cards still to build"
+                ></div>
+              </div>
+              <div class="deck-row">
+                <h2 class="assemble-label">Completed</h2>
+                <div
+                  class="deck-grid"
+                  id="completed-grid"
+                  aria-label="Completed cards"
+                ></div>
+              </div>
             </section>
           </div>
         </div>

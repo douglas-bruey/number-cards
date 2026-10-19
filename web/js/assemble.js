@@ -37,14 +37,16 @@ const els = {
   remaining: document.getElementById("remaining-count"),
   feedback: document.getElementById("feedback"),
   spaceHint: document.getElementById("space-hint"),
-  clearedTray: document.getElementById("cleared-tray"),
-  clearedGrid: document.getElementById("cleared-grid"),
+  pendingGrid: document.getElementById("pending-grid"),
+  completedGrid: document.getElementById("completed-grid"),
 };
 
+/** Cards still waiting to be drawn into the target slot. */
 /** @type {string[]} */
-let remainingTargets = [];
+let pendingTargets = [];
+/** Cards successfully built. */
 /** @type {string[]} */
-let clearedTargets = [];
+let completedTargets = [];
 /** @type {string | null} */
 let currentTarget = null;
 /** @type {string[]} cards currently stacked in the build area */
@@ -137,33 +139,49 @@ function renderPalette() {
   }
 }
 
-function updateHud() {
-  els.remaining.textContent = String(remainingTargets.length);
+function targetsLeft() {
+  return pendingTargets.length + (currentTarget ? 1 : 0);
 }
 
-function renderCleared() {
-  els.clearedGrid.replaceChildren();
-  els.clearedTray.hidden = clearedTargets.length === 0;
-  for (const name of clearedTargets) {
-    const item = document.createElement("div");
-    item.className = "cleared-card";
-    item.appendChild(
-      renderCard(name, { className: "cleared-card__svg" }),
-    );
-    els.clearedGrid.appendChild(item);
-  }
+function updateHud() {
+  els.remaining.textContent = String(targetsLeft());
+}
+
+function renderDeckCard(name, className = "deck-card") {
+  const item = document.createElement("div");
+  item.className = className;
+  item.appendChild(renderCard(name, { className: "deck-card__svg" }));
+  return item;
+}
+
+function renderDeckRows() {
+  els.pendingGrid.replaceChildren(
+    ...pendingTargets.map((name) => renderDeckCard(name)),
+  );
+  els.completedGrid.replaceChildren(
+    ...completedTargets.map((name) =>
+      renderDeckCard(name, "deck-card deck-card--done"),
+    ),
+  );
 }
 
 function presentTarget() {
-  if (remainingTargets.length === 0) {
-    currentTarget = null;
+  if (!currentTarget && pendingTargets.length === 0) {
     clearBuild({ silent: true });
+    renderDeckRows();
+    updateHud();
     showScreen("win");
     return;
   }
-  currentTarget = remainingTargets[0];
+
+  if (!currentTarget) {
+    currentTarget = pendingTargets.shift() ?? null;
+  }
+
   clearBuild({ silent: true });
   renderTarget();
+  renderDeckRows();
+  renderPalette();
   updateHud();
   setFeedback("Match the target", "");
 }
@@ -179,11 +197,12 @@ function clearBuild({ silent = false } = {}) {
 }
 
 function resetGame() {
-  remainingTargets = shuffle([...TARGET_DECK]);
-  clearedTargets = [];
+  pendingTargets = shuffle([...TARGET_DECK]);
+  completedTargets = [];
   currentTarget = null;
   clearBuild({ silent: true });
-  renderCleared();
+  renderTarget();
+  renderDeckRows();
   updateHud();
 }
 
@@ -202,10 +221,11 @@ function checkMatch() {
   if (!samePattern(built, target)) {
     return;
   }
-  const cleared = currentTarget;
-  remainingTargets.shift();
-  clearedTargets.push(cleared);
-  renderCleared();
+  completedTargets.push(currentTarget);
+  currentTarget = null;
+  renderTarget();
+  renderDeckRows();
+  updateHud();
   setFeedback("Matched — nice", "hit");
   window.setTimeout(() => {
     presentTarget();
