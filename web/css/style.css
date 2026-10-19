@@ -605,8 +605,10 @@ a {
 }
 
 .drag-coach__arrow {
-  width: min(420px, 78%);
+  width: min(360px, 68%);
   height: auto;
+  /* Bias toward the palette → build gap, not the target column. */
+  transform: translateX(-6%);
   filter: drop-shadow(0 8px 18px rgba(26, 42, 50, 0.35));
 }
 
