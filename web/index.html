@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Number Cards</title>
+    <meta
+      name="description"
+      content="Practice the number-card deck with browser games and challenges."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Outfit:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="site-shell">
+      <section class="hero" aria-label="Welcome">
+        <div class="hero__copy">
+          <p class="brand">Number Cards</p>
+          <h2>Learn the deck by eye, then play with it.</h2>
+          <p class="tagline">
+            Dot patterns for the numbers 0–9. Pick a game and train until every
+            card is second nature.
+          </p>
+        </div>
+        <div class="hero__visual" aria-hidden="true" id="hero-card"></div>
+      </section>
+
+      <section class="menu" aria-labelledby="games-heading">
+        <h2 class="menu__heading" id="games-heading">Games</h2>
+        <p class="menu__hint">Choose a challenge. More games will land here over time.</p>
+        <div class="game-grid">
+          <a class="game-panel" href="./flashcards/">
+            <p class="game-panel__eyebrow">Game 01</p>
+            <h3 class="game-panel__title">Flashcards</h3>
+            <p class="game-panel__blurb">
+              Name each card in under three seconds. Clear a card after three
+              fast hits.
+            </p>
+            <span class="game-panel__cta">Play →</span>
+          </a>
+          <div class="game-panel" aria-disabled="true">
+            <p class="game-panel__eyebrow">Coming soon</p>
+            <h3 class="game-panel__title">More games</h3>
+            <p class="game-panel__blurb">
+              Extra practice modes and multiplayer challenges will appear in
+              this menu.
+            </p>
+            <span class="game-panel__cta">Stay tuned</span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module">
+      import { renderCard } from "./js/cards.js";
+      document
+        .getElementById("hero-card")
+        .appendChild(renderCard("5.1", { className: "hero-card" }));
+    </script>
+  </body>
+</html>
