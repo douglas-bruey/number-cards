@@ -36,6 +36,7 @@ const els = {
   targetMount: document.getElementById("target-mount"),
   remaining: document.getElementById("remaining-count"),
   feedback: document.getElementById("feedback"),
+  spaceHint: document.getElementById("space-hint"),
 };
 
 /** @type {string[]} */
@@ -225,7 +226,8 @@ function beginDrag(name, originEl, event) {
   originEl.setPointerCapture?.(event.pointerId);
   moveGhost(event.clientX, event.clientY);
   updateGhostTransform();
-  setFeedback("Space rotates · drop on Build", "");
+  els.spaceHint.hidden = false;
+  setFeedback("", "");
 }
 
 function updateGhostTransform() {
@@ -278,6 +280,7 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
   }
   const active = drag;
   drag = null;
+  els.spaceHint.hidden = true;
   const tryDrop = !cancelled && overBuildSlot(clientX, clientY);
   active.originEl.classList.remove("is-dragging");
 
