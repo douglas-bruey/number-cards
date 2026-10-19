@@ -708,6 +708,35 @@ a {
   align-content: start;
 }
 
+.addends-board {
+  display: grid;
+  gap: 1rem;
+}
+
+.addends-rows {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.addends-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(26, 42, 50, 0.08);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.addends-row.is-solved {
+  opacity: 0.72;
+}
+
+.addends-row.is-verifying {
+  border-color: rgba(15, 110, 106, 0.28);
+}
+
 .assemble-board {
   display: grid;
   gap: 1rem;
