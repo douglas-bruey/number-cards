@@ -1,5 +1,6 @@
 import {
   cardDots,
+  cardValue,
   paletteNames,
   renderCard,
   renderDots,
@@ -37,6 +38,10 @@ const els = {
   spaceHint: document.getElementById("space-hint"),
   pendingGrid: document.getElementById("pending-grid"),
   completedGrid: document.getElementById("completed-grid"),
+  equationBuild: document.getElementById("equation-build"),
+  equationTarget: document.getElementById("equation-target"),
+  equationTargetInput: document.getElementById("equation-target-input"),
+  equationSuccess: document.getElementById("equation-success"),
 };
 
 /** Cards still waiting to be drawn into the target slot. */
@@ -51,6 +56,9 @@ let currentTarget = null;
 let stacked = [];
 /** @type {number[]} quarter-turns for each stacked card */
 let stackedTurns = [];
+/** True while the player is filling in card values after a pattern match. */
+let verifying = false;
+let equationSolved = false;
 
 /** @type {{ name: string, turns: number, originEl: HTMLElement, ghost: HTMLElement, offsetX: number, offsetY: number, pointerId: number } | null} */
 let drag = null;
@@ -97,7 +105,7 @@ function renderBuild() {
   );
   const empty = stacked.length === 0;
   els.buildSlot.classList.toggle("is-empty", empty);
-  els.clearBtn.hidden = empty;
+  els.clearBtn.hidden = empty || verifying;
 }
 
 function renderTarget() {
@@ -118,8 +126,8 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    // Palette cards can be used multiple times; only the current target is locked.
-    if (name === currentTarget) {
+    // Locked while verifying, or when this card matches the current target.
+    if (verifying || name === currentTarget) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
@@ -132,6 +140,134 @@ function renderPalette() {
     });
     els.palette.appendChild(btn);
   }
+}
+
+function makeDigitInput(ariaLabel) {
+  const input = document.createElement("input");
+  input.className = "equation-digit";
+  input.type = "text";
+  input.inputMode = "numeric";
+  input.maxLength = 1;
+  input.autocomplete = "off";
+  input.pattern = "[0-9]";
+  input.setAttribute("aria-label", ariaLabel);
+  input.addEventListener("beforeinput", (event) => {
+    if (event.data && !/^[0-9]$/.test(event.data)) {
+      event.preventDefault();
+    }
+  });
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D/g, "").slice(0, 1);
+    onEquationInput(input);
+  });
+  return input;
+}
+
+function hideEquation() {
+  verifying = false;
+  equationSolved = false;
+  els.equationBuild.hidden = true;
+  els.equationTarget.hidden = true;
+  els.equationSuccess.hidden = true;
+  els.equationBuild.replaceChildren();
+  els.equationTargetInput.value = "";
+  els.equationTargetInput.disabled = false;
+  els.equationTargetInput.classList.remove("is-correct", "is-wrong");
+}
+
+function showEquation() {
+  verifying = true;
+  equationSolved = false;
+  els.equationSuccess.hidden = true;
+  els.equationBuild.replaceChildren();
+
+  stacked.forEach((name, index) => {
+    if (index > 0) {
+      const plus = document.createElement("span");
+      plus.className = "equation-op";
+      plus.textContent = "+";
+      plus.setAttribute("aria-hidden", "true");
+      els.equationBuild.appendChild(plus);
+    }
+    const input = makeDigitInput(`Build card ${index + 1} value`);
+    input.dataset.expected = String(cardValue(name));
+    els.equationBuild.appendChild(input);
+  });
+
+  els.equationTargetInput.dataset.expected = String(cardValue(currentTarget));
+  els.equationTargetInput.value = "";
+  els.equationTargetInput.disabled = false;
+  els.equationTargetInput.classList.remove("is-correct", "is-wrong");
+
+  els.equationBuild.hidden = false;
+  els.equationTarget.hidden = false;
+  els.clearBtn.hidden = true;
+  renderPalette();
+
+  const first = els.equationBuild.querySelector(".equation-digit");
+  first?.focus();
+}
+
+function equationInputs() {
+  return [
+    ...els.equationBuild.querySelectorAll(".equation-digit"),
+    els.equationTargetInput,
+  ];
+}
+
+function onEquationInput(current) {
+  if (!verifying || equationSolved) {
+    return;
+  }
+
+  for (const input of equationInputs()) {
+    if (input.value === "") {
+      input.classList.remove("is-correct", "is-wrong");
+    } else if (input.value === input.dataset.expected) {
+      input.classList.add("is-correct");
+      input.classList.remove("is-wrong");
+    } else {
+      input.classList.add("is-wrong");
+      input.classList.remove("is-correct");
+    }
+  }
+
+  if (current.value !== "" && current.value.length === 1) {
+    const inputs = equationInputs();
+    const idx = inputs.indexOf(current);
+    if (idx >= 0 && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    }
+  }
+
+  const allFilled = equationInputs().every((input) => input.value !== "");
+  const allCorrect = equationInputs().every(
+    (input) => input.value === input.dataset.expected,
+  );
+  if (allFilled && allCorrect) {
+    completeEquation();
+  }
+}
+
+function completeEquation() {
+  if (equationSolved || !currentTarget) {
+    return;
+  }
+  equationSolved = true;
+  for (const input of equationInputs()) {
+    input.disabled = true;
+    input.classList.add("is-correct");
+    input.classList.remove("is-wrong");
+  }
+  els.equationSuccess.hidden = false;
+
+  const cleared = currentTarget;
+  window.setTimeout(() => {
+    completedTargets.push(cleared);
+    currentTarget = null;
+    hideEquation();
+    presentTarget();
+  }, 2000);
 }
 
 function renderDeckCard(name, className = "deck-card") {
@@ -153,6 +289,8 @@ function renderDeckRows() {
 }
 
 function presentTarget() {
+  hideEquation();
+
   if (!currentTarget && pendingTargets.length === 0) {
     clearBuild();
     renderDeckRows();
@@ -164,13 +302,18 @@ function presentTarget() {
     currentTarget = pendingTargets.shift() ?? null;
   }
 
-  clearBuild();
+  stacked = [];
+  stackedTurns = [];
+  renderBuild();
   renderTarget();
   renderDeckRows();
   renderPalette();
 }
 
 function clearBuild() {
+  if (verifying) {
+    return;
+  }
   stacked = [];
   stackedTurns = [];
   renderBuild();
@@ -181,6 +324,7 @@ function resetGame() {
   pendingTargets = shuffle([...TARGET_DECK]);
   completedTargets = [];
   currentTarget = null;
+  hideEquation();
   clearBuild();
   renderTarget();
   renderDeckRows();
@@ -193,7 +337,7 @@ function startGame() {
 }
 
 function checkMatch() {
-  if (!currentTarget) {
+  if (!currentTarget || verifying) {
     return;
   }
   const built = buildDotsFromStack();
@@ -201,13 +345,7 @@ function checkMatch() {
   if (!samePattern(built, target)) {
     return;
   }
-  completedTargets.push(currentTarget);
-  currentTarget = null;
-  renderTarget();
-  renderDeckRows();
-  window.setTimeout(() => {
-    presentTarget();
-  }, 650);
+  showEquation();
 }
 
 /**
@@ -216,7 +354,7 @@ function checkMatch() {
  * @param {PointerEvent} event
  */
 function beginDrag(name, originEl, event) {
-  if (drag || event.button !== 0) {
+  if (drag || verifying || event.button !== 0) {
     return;
   }
   event.preventDefault();
@@ -366,5 +504,16 @@ document.addEventListener("keydown", onKeyDown);
 els.startBtn.addEventListener("click", startGame);
 els.againBtn.addEventListener("click", startGame);
 els.clearBtn.addEventListener("click", () => clearBuild());
+els.equationTargetInput.addEventListener("beforeinput", (event) => {
+  if (event.data && !/^[0-9]$/.test(event.data)) {
+    event.preventDefault();
+  }
+});
+els.equationTargetInput.addEventListener("input", () => {
+  els.equationTargetInput.value = els.equationTargetInput.value
+    .replace(/\D/g, "")
+    .slice(0, 1);
+  onEquationInput(els.equationTargetInput);
+});
 
 showScreen("start");

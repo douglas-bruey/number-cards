@@ -674,6 +674,71 @@ a {
   justify-items: center;
 }
 
+.equation-build,
+.equation-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+}
+
+.equation-build[hidden],
+.equation-target[hidden],
+.equation-success[hidden] {
+  display: none !important;
+}
+
+.equation-op {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  line-height: 1;
+}
+
+.equation-digit {
+  appearance: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1.5px solid rgba(26, 42, 50, 0.22);
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+}
+
+.equation-digit:focus {
+  outline: none;
+  border-color: rgba(15, 110, 106, 0.65);
+  box-shadow: 0 0 0 3px rgba(20, 145, 139, 0.18);
+}
+
+.equation-digit.is-correct {
+  border-color: rgba(47, 158, 68, 0.7);
+  background: rgba(47, 158, 68, 0.1);
+}
+
+.equation-digit.is-wrong {
+  border-color: rgba(201, 42, 42, 0.65);
+  background: rgba(201, 42, 42, 0.08);
+}
+
+.equation-success {
+  margin: 0.35rem 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2b8a3e;
+  animation: space-hint-in 220ms var(--ease-out);
+}
+
 .space-hint {
   display: flex;
   align-items: center;
