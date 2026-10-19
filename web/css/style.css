@@ -575,6 +575,55 @@ a {
   color: var(--sea);
 }
 
+#play-screen {
+  position: relative;
+}
+
+.drag-coach {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  border-radius: var(--radius-panel);
+  background: rgba(26, 42, 50, 0.28);
+  color: #fffef8;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms var(--ease-out);
+}
+
+.drag-coach.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.drag-coach[hidden] {
+  display: none !important;
+}
+
+.drag-coach__arrow {
+  width: min(420px, 78%);
+  height: auto;
+  filter: drop-shadow(0 8px 18px rgba(26, 42, 50, 0.35));
+}
+
+.drag-coach.is-visible .drag-coach__arrow {
+  animation: drag-coach-nudge 1100ms var(--ease-out) infinite;
+}
+
+@keyframes drag-coach-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(14px);
+  }
+}
+
 .assemble-layout {
   display: grid;
   gap: 1rem;

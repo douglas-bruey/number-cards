@@ -48,6 +48,37 @@
       </section>
 
       <section id="play-screen" class="screen" hidden>
+        <div
+          class="drag-coach"
+          id="drag-coach"
+          hidden
+          role="dialog"
+          aria-label="Drag a card from the palette to the build area"
+        >
+          <svg
+            class="drag-coach__arrow"
+            viewBox="0 0 280 120"
+            aria-hidden="true"
+          >
+            <path
+              class="drag-coach__path"
+              d="M28 60 C 110 18, 170 18, 232 56"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="10"
+              stroke-linecap="round"
+            />
+            <path
+              class="drag-coach__head"
+              d="M210 34 L248 60 L208 78"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
         <div class="assemble-layout">
           <div class="assemble-side">
             <aside

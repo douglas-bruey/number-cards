@@ -40,6 +40,7 @@ const els = {
   equationTarget: document.getElementById("equation-target"),
   equationTargetInput: document.getElementById("equation-target-input"),
   assembleBoard: document.querySelector(".assemble-board"),
+  dragCoach: document.getElementById("drag-coach"),
 };
 
 /** Cards still waiting to be drawn into the target slot. */
@@ -57,6 +58,8 @@ let stackedTurns = [];
 /** True while the player is filling in card values after a pattern match. */
 let verifying = false;
 let equationSolved = false;
+/** @type {number | null} */
+let dragCoachTimer = null;
 
 /** @type {{ name: string, turns: number, originEl: HTMLElement, ghost: HTMLElement, offsetX: number, offsetY: number, pointerId: number } | null} */
 let drag = null;
@@ -74,6 +77,9 @@ function showScreen(name) {
   els.startScreen.hidden = name !== "start";
   els.playScreen.hidden = name !== "play";
   els.winScreen.hidden = name !== "win";
+  if (name !== "play") {
+    hideDragCoach();
+  }
 }
 
 function buildDotsFromStack() {
@@ -390,10 +396,41 @@ function resetGame() {
   renderDeckRows();
 }
 
+function hideDragCoach() {
+  if (dragCoachTimer !== null) {
+    window.clearTimeout(dragCoachTimer);
+    dragCoachTimer = null;
+  }
+  if (!els.dragCoach) {
+    return;
+  }
+  els.dragCoach.classList.remove("is-visible");
+  els.dragCoach.hidden = true;
+}
+
+function showDragCoach() {
+  if (!els.dragCoach) {
+    return;
+  }
+  hideDragCoach();
+  els.dragCoach.hidden = false;
+  // Force reflow so the enter animation can replay.
+  void els.dragCoach.offsetWidth;
+  els.dragCoach.classList.add("is-visible");
+  dragCoachTimer = window.setTimeout(() => {
+    els.dragCoach.classList.remove("is-visible");
+    dragCoachTimer = window.setTimeout(() => {
+      els.dragCoach.hidden = true;
+      dragCoachTimer = null;
+    }, 280);
+  }, 2600);
+}
+
 function startGame() {
   resetGame();
   showScreen("play");
   presentTarget();
+  showDragCoach();
 }
 
 function checkMatch() {
@@ -417,6 +454,7 @@ function beginDrag(name, originEl, event) {
   if (drag || verifying || event.button !== 0) {
     return;
   }
+  hideDragCoach();
   event.preventDefault();
 
   const rect = originEl.getBoundingClientRect();
@@ -564,6 +602,10 @@ document.addEventListener("keydown", onKeyDown);
 els.startBtn.addEventListener("click", startGame);
 els.againBtn.addEventListener("click", startGame);
 els.clearBtn.addEventListener("click", () => clearBuild());
+els.dragCoach?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  hideDragCoach();
+});
 els.equationTargetInput.addEventListener("beforeinput", (event) => {
   if (event.data && !/^[0-9]$/.test(event.data)) {
     event.preventDefault();
