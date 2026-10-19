@@ -8,19 +8,22 @@ import {
   samePattern,
   tryMergeDots,
 } from "./cards.js";
-import { pairKey, valuePartitions } from "./partitions.js";
+import { pairKey, partitionRows } from "./partitions.js";
 
-/** Challenge deck: targets with two-card addend partitions. */
-const TARGET_DECK = [
-  "2.2",
-  "3.2",
-  "4.2",
-  "5.1",
-  "6.1",
-  "7.1",
-  "8.1",
-  "8.2",
-  "9.1",
+/**
+ * Challenge deck. Most numbers are one card; 8 groups 8.1 (1+7, 2+6, 3+5)
+ * with 8.2 (4+4) so both patterns are shown together.
+ * @type {Array<{ id: string, cards: string[] }>}
+ */
+const CHALLENGES = [
+  { id: "2", cards: ["2.2"] },
+  { id: "3", cards: ["3.2"] },
+  { id: "4", cards: ["4.2"] },
+  { id: "5", cards: ["5.1"] },
+  { id: "6", cards: ["6.1"] },
+  { id: "7", cards: ["7.1"] },
+  { id: "8", cards: ["8.1", "8.2"] },
+  { id: "9", cards: ["9.1"] },
 ];
 
 const els = {
@@ -41,18 +44,20 @@ const els = {
   assemblePalette: document.querySelector(".assemble-palette"),
 };
 
-/** @type {string[]} */
-let pendingTargets = [];
-/** @type {string[]} */
-let completedTargets = [];
-/** @type {string | null} */
-let currentTarget = null;
-/** @type {Array<[number, number]>} */
+/** @type {typeof CHALLENGES} */
+let pendingChallenges = [];
+/** @type {typeof CHALLENGES} */
+let completedChallenges = [];
+/** @type {(typeof CHALLENGES)[number] | null} */
+let currentChallenge = null;
+/** @type {Array<{ values: [number, number], target: string }>} */
 let partitions = [];
 
 /**
  * @typedef {{
  *   index: number,
+ *   target: string,
+ *   values: [number, number],
  *   stacked: string[],
  *   turns: number[],
  *   verifying: boolean,
@@ -202,7 +207,7 @@ function showRowEquation(row) {
     row.equationBuild.appendChild(input);
   });
 
-  row.equationTargetInput.dataset.expected = String(cardValue(currentTarget));
+  row.equationTargetInput.dataset.expected = String(cardValue(row.target));
   row.equationTargetInput.dataset.addends = expectedAddends.join(",");
   row.equationTargetInput.value = "";
   row.equationTargetInput.disabled = false;
@@ -299,7 +304,7 @@ function onRowEquationInput(row, current) {
 }
 
 function completeRowEquation(row) {
-  if (row.solved || !currentTarget) {
+  if (row.solved || !currentChallenge) {
     return;
   }
   row.solved = true;
@@ -339,10 +344,11 @@ function clearRow(row) {
   renderPalette();
 }
 
-function createRow(index) {
+function createRow(index, partition) {
   const root = document.createElement("div");
   root.className = "addends-row";
   root.dataset.row = String(index);
+  root.dataset.target = partition.target;
 
   root.innerHTML = `
     <div class="assemble-slot">
@@ -375,6 +381,8 @@ function createRow(index) {
   /** @type {Row} */
   const row = {
     index,
+    target: partition.target,
+    values: partition.values,
     stacked: [],
     turns: [],
     verifying: false,
@@ -391,7 +399,7 @@ function createRow(index) {
 
   root
     .querySelector(".card-slot--target .card-slot__mount")
-    .appendChild(renderCard(currentTarget, { className: "play-card" }));
+    .appendChild(renderCard(partition.target, { className: "play-card" }));
   row.clearBtn.addEventListener("click", () => clearRow(row));
   renderRowBuild(row);
   return row;
@@ -399,8 +407,8 @@ function createRow(index) {
 
 function renderRows() {
   els.rows.replaceChildren();
-  rows = partitions.map((_, index) => {
-    const row = createRow(index);
+  rows = partitions.map((partition, index) => {
+    const row = createRow(index, partition);
     els.rows.appendChild(row.root);
     return row;
   });
@@ -415,7 +423,8 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    if (anyVerifying || name === currentTarget) {
+    const lockedTargets = new Set(currentChallenge?.cards ?? []);
+    if (anyVerifying || lockedTargets.has(name)) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
@@ -430,30 +439,37 @@ function renderPalette() {
   }
 }
 
-function renderDeckCard(name, className = "deck-card") {
-  const item = document.createElement("div");
-  item.className = className;
-  item.appendChild(renderCard(name, { className: "deck-card__svg" }));
-  return item;
+function renderChallengeGroup(challenge, className = "deck-card") {
+  const group = document.createElement("div");
+  group.className =
+    challenge.cards.length > 1 ? "deck-group" : "deck-group deck-group--single";
+  group.dataset.challenge = challenge.id;
+  for (const name of challenge.cards) {
+    const item = document.createElement("div");
+    item.className = className;
+    item.appendChild(renderCard(name, { className: "deck-card__svg" }));
+    group.appendChild(item);
+  }
+  return group;
 }
 
 function renderDeckRows() {
   els.pendingGrid.replaceChildren(
-    ...pendingTargets.map((name) => renderDeckCard(name)),
+    ...pendingChallenges.map((challenge) => renderChallengeGroup(challenge)),
   );
   els.completedGrid.replaceChildren(
-    ...completedTargets.map((name) =>
-      renderDeckCard(name, "deck-card deck-card--done"),
+    ...completedChallenges.map((challenge) =>
+      renderChallengeGroup(challenge, "deck-card deck-card--done"),
     ),
   );
 }
 
 function finishTarget() {
-  if (!currentTarget) {
+  if (!currentChallenge) {
     return;
   }
-  completedTargets.push(currentTarget);
-  currentTarget = null;
+  completedChallenges.push(currentChallenge);
+  currentChallenge = null;
   partitions = [];
   rows = [];
   els.rows.replaceChildren();
@@ -463,23 +479,23 @@ function finishTarget() {
 
 function presentTarget() {
   hideDragCoach();
-  if (!currentTarget && pendingTargets.length === 0) {
+  if (!currentChallenge && pendingChallenges.length === 0) {
     showScreen("win");
     return;
   }
-  if (!currentTarget) {
-    currentTarget = pendingTargets.shift() ?? null;
+  if (!currentChallenge) {
+    currentChallenge = pendingChallenges.shift() ?? null;
   }
-  partitions = valuePartitions(currentTarget);
+  partitions = partitionRows(currentChallenge.cards);
   renderRows();
   renderDeckRows();
   renderPalette();
 }
 
 function resetGame() {
-  pendingTargets = shuffle([...TARGET_DECK]);
-  completedTargets = [];
-  currentTarget = null;
+  pendingChallenges = shuffle(CHALLENGES.map((challenge) => ({ ...challenge })));
+  completedChallenges = [];
+  currentChallenge = null;
   partitions = [];
   rows = [];
   els.rows.replaceChildren();
@@ -667,7 +683,7 @@ function tryAcceptDrop(row, active) {
     return { ok: true, complete: false };
   }
 
-  if (!samePattern(merged, cardDots(currentTarget))) {
+  if (!samePattern(merged, cardDots(row.target))) {
     // Keep both cards so the player can clear and retry.
     row.stacked = nextStacked;
     row.turns = nextTurns;
@@ -676,9 +692,13 @@ function tryAcceptDrop(row, active) {
 
   const values = nextStacked.map((name) => cardValue(name));
   const key = pairKey(values[0], values[1]);
-  const allowed = partitions.some(([a, b]) => pairKey(a, b) === key);
-  if (!allowed || claimedPairs().has(key)) {
-    return { ok: false, reason: allowed ? "duplicate" : "partition" };
+  const expectedKey = pairKey(row.values[0], row.values[1]);
+  if (key !== expectedKey) {
+    // Pattern matched a different partition than this row expects.
+    return { ok: false, reason: "partition" };
+  }
+  if (claimedPairs().has(key)) {
+    return { ok: false, reason: "duplicate" };
   }
 
   row.stacked = nextStacked;

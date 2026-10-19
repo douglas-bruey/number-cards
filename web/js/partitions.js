@@ -71,3 +71,29 @@ export function pairKey(a, b) {
   const hi = Math.max(a, b);
   return `${lo}+${hi}`;
 }
+
+/**
+ * Build rows for one or more target cards. Each realizable value pair is
+ * attached to the specific target pattern it can form.
+ * @param {string[]} targets
+ * @returns {Array<{ values: [number, number], target: string }>}
+ */
+export function partitionRows(targets) {
+  /** @type {Map<string, { values: [number, number], target: string }>} */
+  const found = new Map();
+  for (const target of targets) {
+    for (const values of valuePartitions(target)) {
+      const key = pairKey(values[0], values[1]);
+      // Prefer the first target that claims a pair; callers should order
+      // targets so the intended pattern wins (e.g. 8.1 before 8.2, except
+      // 4+4 which only exists on 8.2).
+      if (!found.has(key)) {
+        found.set(key, { values, target });
+      }
+    }
+  }
+  return [...found.values()].sort(
+    (left, right) =>
+      left.values[0] - right.values[0] || left.values[1] - right.values[1],
+  );
+}
