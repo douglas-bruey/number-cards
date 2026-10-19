@@ -4,8 +4,11 @@ import {
   renderCard,
 } from "./cards.js";
 
-const TIME_LIMIT_MS = 3000;
+const DEFAULT_TIME_SEC = 3;
+const MIN_TIME_SEC = 1;
+const MAX_TIME_SEC = 9;
 const WINS_TO_ELIMINATE = 3;
+const TIME_PARAM = "time";
 
 const els = {
   stage: document.getElementById("stage"),
@@ -21,6 +24,10 @@ const els = {
   winScreen: document.getElementById("win-screen"),
   startBtn: document.getElementById("start-btn"),
   againBtn: document.getElementById("again-btn"),
+  timeInputs: [...document.querySelectorAll(".time-control__input")],
+  timeLabels: [...document.querySelectorAll("[data-time-label]")],
+  timeDecBtns: [...document.querySelectorAll("[data-time-dec]")],
+  timeIncBtns: [...document.querySelectorAll("[data-time-inc]")],
 };
 
 /** @type {Map<string, number>} */
@@ -31,9 +38,60 @@ let remaining = [];
 let current = null;
 /** @type {number | null} */
 let roundStartedAt = null;
+/** @type {number} */
+let roundLimitMs = DEFAULT_TIME_SEC * 1000;
 /** @type {number | null} */
 let rafId = null;
 let locked = false;
+let timeLimitSec = DEFAULT_TIME_SEC;
+
+function clampTime(seconds) {
+  const n = Number(seconds);
+  if (!Number.isFinite(n)) {
+    return DEFAULT_TIME_SEC;
+  }
+  return Math.min(MAX_TIME_SEC, Math.max(MIN_TIME_SEC, Math.round(n)));
+}
+
+function timeLimitMs() {
+  return timeLimitSec * 1000;
+}
+
+function readTimeFromUrl() {
+  const raw = new URLSearchParams(window.location.search).get(TIME_PARAM);
+  return raw === null ? DEFAULT_TIME_SEC : clampTime(raw);
+}
+
+function writeTimeToUrl(seconds) {
+  const url = new URL(window.location.href);
+  if (seconds === DEFAULT_TIME_SEC) {
+    url.searchParams.delete(TIME_PARAM);
+  } else {
+    url.searchParams.set(TIME_PARAM, String(seconds));
+  }
+  window.history.replaceState(null, "", url);
+}
+
+function setTimeLimit(seconds, { syncUrl = true } = {}) {
+  timeLimitSec = clampTime(seconds);
+  for (const input of els.timeInputs) {
+    input.value = String(timeLimitSec);
+    input.setAttribute("aria-valuetext", `${timeLimitSec} seconds`);
+  }
+  for (const label of els.timeLabels) {
+    label.textContent = String(timeLimitSec);
+  }
+  els.timerTrack.setAttribute("aria-valuemax", String(timeLimitSec));
+  for (const btn of els.timeDecBtns) {
+    btn.disabled = timeLimitSec <= MIN_TIME_SEC;
+  }
+  for (const btn of els.timeIncBtns) {
+    btn.disabled = timeLimitSec >= MAX_TIME_SEC;
+  }
+  if (syncUrl) {
+    writeTimeToUrl(timeLimitSec);
+  }
+}
 
 function shuffle(items) {
   const copy = [...items];
@@ -98,10 +156,10 @@ function tickTimer() {
     return;
   }
   const elapsed = performance.now() - roundStartedAt;
-  const left = Math.max(0, 1 - elapsed / TIME_LIMIT_MS);
+  const left = Math.max(0, 1 - elapsed / roundLimitMs);
   els.timerBar.style.transform = `scaleX(${left})`;
 
-  if (elapsed >= TIME_LIMIT_MS) {
+  if (elapsed >= roundLimitMs) {
     handleTimeout();
     return;
   }
@@ -110,6 +168,7 @@ function tickTimer() {
 
 function startRoundTimer() {
   stopTimer();
+  roundLimitMs = timeLimitMs();
   els.timerBar.style.transform = "scaleX(1)";
   els.timerTrack.dataset.state = "running";
   roundStartedAt = performance.now();
@@ -172,7 +231,7 @@ function handleAnswer(answer) {
 
   const elapsed = performance.now() - roundStartedAt;
   const correct = answer === cardValue(current);
-  const inTime = elapsed <= TIME_LIMIT_MS;
+  const inTime = elapsed <= roundLimitMs;
 
   locked = true;
   stopTimer();
@@ -224,6 +283,26 @@ function startGame() {
   presentNextCard();
 }
 
+function bindTimeControls() {
+  for (const input of els.timeInputs) {
+    input.addEventListener("input", () => {
+      setTimeLimit(input.value);
+    });
+  }
+  for (const btn of els.timeDecBtns) {
+    btn.addEventListener("click", () => {
+      setTimeLimit(timeLimitSec - 1);
+    });
+  }
+  for (const btn of els.timeIncBtns) {
+    btn.addEventListener("click", () => {
+      setTimeLimit(timeLimitSec + 1);
+    });
+  }
+}
+
+setTimeLimit(readTimeFromUrl(), { syncUrl: true });
+bindTimeControls();
 buildAnswerPad();
 showScreen("start");
 els.startBtn.addEventListener("click", startGame);

@@ -6,7 +6,7 @@
     <title>Flashcards · Number Cards</title>
     <meta
       name="description"
-      content="Memorize number cards: answer 0–9 within 3 seconds to clear the deck."
+      content="Memorize number cards: answer 0–9 before the timer runs out to clear the deck."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,13 +30,52 @@
           runs out.
         </p>
         <ul class="rules">
-          <li>You have <strong>3 seconds</strong> per card.</li>
+          <li>
+            You have
+            <strong><span data-time-label>3</span> seconds</strong> per card.
+          </li>
           <li>
             Answer a card correctly in time <strong>3 times</strong> to eliminate
             it.
           </li>
           <li>Clear every card in the deck to win.</li>
         </ul>
+        <div class="time-control" data-time-control>
+          <label class="time-control__label" for="time-limit">
+            Time per card
+          </label>
+          <div class="time-control__row">
+            <button
+              type="button"
+              class="time-control__btn"
+              data-time-dec
+              aria-label="Decrease time"
+            >
+              −
+            </button>
+            <input
+              id="time-limit"
+              class="time-control__input"
+              type="range"
+              min="1"
+              max="9"
+              step="1"
+              value="3"
+              aria-valuetext="3 seconds"
+            />
+            <button
+              type="button"
+              class="time-control__btn"
+              data-time-inc
+              aria-label="Increase time"
+            >
+              +
+            </button>
+            <span class="time-control__value"
+              ><span data-time-label>3</span>s</span
+            >
+          </div>
+        </div>
         <div class="start-actions">
           <button type="button" class="btn" id="start-btn">Start</button>
         </div>
@@ -69,6 +108,42 @@
             Cards left<br />
             <strong id="remaining-count">17</strong>
           </p>
+          <div class="time-control time-control--compact" data-time-control>
+            <label class="time-control__label" for="time-limit-play">
+              Time per card
+            </label>
+            <div class="time-control__row">
+              <button
+                type="button"
+                class="time-control__btn"
+                data-time-dec
+                aria-label="Decrease time"
+              >
+                −
+              </button>
+              <input
+                id="time-limit-play"
+                class="time-control__input"
+                type="range"
+                min="1"
+                max="9"
+                step="1"
+                value="3"
+                aria-valuetext="3 seconds"
+              />
+              <button
+                type="button"
+                class="time-control__btn"
+                data-time-inc
+                aria-label="Increase time"
+              >
+                +
+              </button>
+              <span class="time-control__value"
+                ><span data-time-label>3</span>s</span
+              >
+            </div>
+          </div>
           <p class="hud__stat">Progress to clear (3 fast hits each)</p>
           <ul class="progress-list" id="progress-list"></ul>
         </aside>
