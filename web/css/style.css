@@ -607,9 +607,8 @@ a {
 .palette-card {
   appearance: none;
   display: grid;
-  gap: 0.25rem;
   justify-items: center;
-  padding: 0.4rem;
+  padding: 0.35rem;
   border: 1px solid rgba(26, 42, 50, 0.1);
   border-radius: 0.85rem;
   background: rgba(255, 255, 255, 0.78);
@@ -637,12 +636,6 @@ a {
   width: 100%;
   height: auto;
   pointer-events: none;
-}
-
-.palette-card__tag {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 700;
 }
 
 .assemble-board {
@@ -731,7 +724,7 @@ a {
   top: 0;
   left: 0;
   z-index: 40;
-  width: min(200px, 42vw);
+  /* Width is set in JS to match the build-slot card. */
   pointer-events: none;
   will-change: transform;
 }
@@ -754,10 +747,10 @@ a {
   fill: rgba(255, 254, 248, 0.32);
 }
 
+/* No cutout holes while dragging — only filled dots + outline. */
 .drag-ghost__card .card-dot--hole {
-  fill: rgba(255, 254, 248, 0.12);
-  stroke: rgba(26, 42, 50, 0.2);
-  stroke-width: 1;
+  fill: none;
+  stroke: none;
 }
 
 @keyframes float-card {

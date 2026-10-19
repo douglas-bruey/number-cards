@@ -126,10 +126,6 @@ function renderPalette() {
       btn.classList.add("is-used");
     }
     btn.appendChild(renderCard(name, { className: "palette-card__svg" }));
-    const tag = document.createElement("span");
-    tag.className = "palette-card__tag";
-    tag.textContent = name;
-    btn.appendChild(tag);
     btn.addEventListener("pointerdown", (event) => {
       if (btn.disabled) {
         return;
@@ -211,18 +207,23 @@ function beginDrag(name, originEl, event) {
   event.preventDefault();
 
   const rect = originEl.getBoundingClientRect();
+  const buildSize = els.buildMount.getBoundingClientRect();
+  const ghostSize = Math.max(buildSize.width, 1);
   const ghost = document.createElement("div");
   ghost.className = "drag-ghost";
+  ghost.style.width = `${ghostSize}px`;
   ghost.appendChild(renderCard(name, { className: "drag-ghost__card" }));
   document.body.appendChild(ghost);
 
+  // Keep the grab point under the cursor after scaling up to build size.
+  const scale = ghostSize / Math.max(rect.width, 1);
   drag = {
     name,
     turns: 0,
     originEl,
     ghost,
-    offsetX: event.clientX - rect.left,
-    offsetY: event.clientY - rect.top,
+    offsetX: (event.clientX - rect.left) * scale,
+    offsetY: (event.clientY - rect.top) * scale,
     pointerId: event.pointerId,
   };
 
