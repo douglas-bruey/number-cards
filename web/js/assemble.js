@@ -46,8 +46,6 @@ let currentTarget = null;
 let stacked = [];
 /** @type {number[]} quarter-turns for each stacked card */
 let stackedTurns = [];
-/** @type {Set<string>} palette card names still available this round */
-let available = new Set();
 
 /** @type {{ name: string, turns: number, originEl: HTMLElement, ghost: HTMLElement, offsetX: number, offsetY: number, pointerId: number } | null} */
 let drag = null;
@@ -118,7 +116,8 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    if (!available.has(name) || name === currentTarget) {
+    // Palette cards can be used multiple times; only the current target is locked.
+    if (name === currentTarget) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
@@ -154,7 +153,6 @@ function presentTarget() {
 function clearBuild({ silent = false } = {}) {
   stacked = [];
   stackedTurns = [];
-  available = new Set(paletteNames());
   renderBuild();
   renderPalette();
   if (!silent) {
@@ -296,10 +294,8 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
 
     stacked.push(active.name);
     stackedTurns.push(active.turns);
-    available.delete(active.name);
     active.ghost.remove();
     renderBuild();
-    renderPalette();
     setFeedback("", "");
     checkMatch();
     return;
