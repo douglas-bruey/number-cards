@@ -37,10 +37,14 @@ const els = {
   remaining: document.getElementById("remaining-count"),
   feedback: document.getElementById("feedback"),
   spaceHint: document.getElementById("space-hint"),
+  clearedTray: document.getElementById("cleared-tray"),
+  clearedGrid: document.getElementById("cleared-grid"),
 };
 
 /** @type {string[]} */
 let remainingTargets = [];
+/** @type {string[]} */
+let clearedTargets = [];
 /** @type {string | null} */
 let currentTarget = null;
 /** @type {string[]} cards currently stacked in the build area */
@@ -137,6 +141,19 @@ function updateHud() {
   els.remaining.textContent = String(remainingTargets.length);
 }
 
+function renderCleared() {
+  els.clearedGrid.replaceChildren();
+  els.clearedTray.hidden = clearedTargets.length === 0;
+  for (const name of clearedTargets) {
+    const item = document.createElement("div");
+    item.className = "cleared-card";
+    item.appendChild(
+      renderCard(name, { className: "cleared-card__svg" }),
+    );
+    els.clearedGrid.appendChild(item);
+  }
+}
+
 function presentTarget() {
   if (remainingTargets.length === 0) {
     currentTarget = null;
@@ -163,8 +180,10 @@ function clearBuild({ silent = false } = {}) {
 
 function resetGame() {
   remainingTargets = shuffle([...TARGET_DECK]);
+  clearedTargets = [];
   currentTarget = null;
   clearBuild({ silent: true });
+  renderCleared();
   updateHud();
 }
 
@@ -183,7 +202,10 @@ function checkMatch() {
   if (!samePattern(built, target)) {
     return;
   }
+  const cleared = currentTarget;
   remainingTargets.shift();
+  clearedTargets.push(cleared);
+  renderCleared();
   setFeedback("Matched — nice", "hit");
   window.setTimeout(() => {
     presentTarget();

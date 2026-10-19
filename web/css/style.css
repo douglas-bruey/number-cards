@@ -716,6 +716,38 @@ a {
   display: none !important;
 }
 
+.cleared-tray {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-panel);
+  border: 1px solid rgba(26, 42, 50, 0.08);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.cleared-tray[hidden] {
+  display: none !important;
+}
+
+.cleared-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.cleared-card {
+  display: grid;
+  place-items: center;
+  animation: space-hint-in 280ms var(--ease-out);
+}
+
+.cleared-card__svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+
 .space-hint__label {
   line-height: 1;
 }
