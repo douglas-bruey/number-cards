@@ -619,10 +619,10 @@ a {
 @keyframes drag-coach-nudge {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translateX(-6%);
   }
   50% {
-    transform: translateX(14px);
+    transform: translateX(calc(-6% + 10px));
   }
 }
 
