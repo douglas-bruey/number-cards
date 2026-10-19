@@ -41,6 +41,9 @@ const els = {
   equationTargetInput: document.getElementById("equation-target-input"),
   assembleBoard: document.querySelector(".assemble-board"),
   dragCoach: document.getElementById("drag-coach"),
+  dragCoachPath: document.getElementById("drag-coach-path"),
+  dragCoachHead: document.getElementById("drag-coach-head"),
+  assemblePalette: document.querySelector(".assemble-palette"),
 };
 
 /** Cards still waiting to be drawn into the target slot. */
@@ -408,15 +411,61 @@ function hideDragCoach() {
   els.dragCoach.hidden = true;
 }
 
+function layoutDragCoachArrow() {
+  if (
+    !els.dragCoach ||
+    !els.dragCoachPath ||
+    !els.dragCoachHead ||
+    !els.assemblePalette ||
+    !els.buildSlot
+  ) {
+    return;
+  }
+
+  const coachRect = els.dragCoach.getBoundingClientRect();
+  const paletteRect = els.assemblePalette.getBoundingClientRect();
+  const buildRect = els.buildSlot.getBoundingClientRect();
+
+  const startX = paletteRect.left + paletteRect.width * 0.55 - coachRect.left;
+  const startY = paletteRect.top + paletteRect.height * 0.42 - coachRect.top;
+  const endX = buildRect.left + buildRect.width * 0.5 - coachRect.left;
+  const endY = buildRect.top + buildRect.height * 0.5 - coachRect.top;
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const midX = startX + dx * 0.5;
+  const midY = Math.min(startY, endY) - Math.max(36, Math.abs(dx) * 0.12);
+
+  els.dragCoachPath.setAttribute(
+    "d",
+    `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`,
+  );
+
+  const angle = Math.atan2(endY - midY, endX - midX);
+  const headLen = 28;
+  const spread = Math.PI / 7;
+  const leftX = endX - headLen * Math.cos(angle - spread);
+  const leftY = endY - headLen * Math.sin(angle - spread);
+  const rightX = endX - headLen * Math.cos(angle + spread);
+  const rightY = endY - headLen * Math.sin(angle + spread);
+  els.dragCoachHead.setAttribute(
+    "d",
+    `M ${leftX} ${leftY} L ${endX} ${endY} L ${rightX} ${rightY}`,
+  );
+}
+
 function showDragCoach() {
   if (!els.dragCoach) {
     return;
   }
   hideDragCoach();
   els.dragCoach.hidden = false;
-  // Force reflow so the enter animation can replay.
-  void els.dragCoach.offsetWidth;
-  els.dragCoach.classList.add("is-visible");
+  // Wait a frame so layout is settled after revealing the play screen.
+  requestAnimationFrame(() => {
+    layoutDragCoachArrow();
+    void els.dragCoach.offsetWidth;
+    els.dragCoach.classList.add("is-visible");
+  });
   dragCoachTimer = window.setTimeout(() => {
     els.dragCoach.classList.remove("is-visible");
     dragCoachTimer = window.setTimeout(() => {
@@ -605,6 +654,11 @@ els.clearBtn.addEventListener("click", () => clearBuild());
 els.dragCoach?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   hideDragCoach();
+});
+window.addEventListener("resize", () => {
+  if (els.dragCoach && !els.dragCoach.hidden) {
+    layoutDragCoachArrow();
+  }
 });
 els.equationTargetInput.addEventListener("beforeinput", (event) => {
   if (event.data && !/^[0-9]$/.test(event.data)) {

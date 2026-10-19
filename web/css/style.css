@@ -583,9 +583,6 @@ a {
   position: absolute;
   inset: 0;
   z-index: 8;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
   border-radius: var(--radius-panel);
   background: rgba(26, 42, 50, 0.28);
   color: #fffef8;
@@ -605,24 +602,28 @@ a {
 }
 
 .drag-coach__arrow {
-  width: min(360px, 68%);
-  height: auto;
-  /* Bias toward the palette → build gap, not the target column. */
-  transform: translateX(-6%);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   filter: drop-shadow(0 8px 18px rgba(26, 42, 50, 0.35));
 }
 
-.drag-coach.is-visible .drag-coach__arrow {
-  animation: drag-coach-nudge 1100ms var(--ease-out) infinite;
+.drag-coach.is-visible .drag-coach__path,
+.drag-coach.is-visible .drag-coach__head {
+  animation: drag-coach-draw 1100ms var(--ease-out) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-@keyframes drag-coach-nudge {
+@keyframes drag-coach-draw {
   0%,
   100% {
-    transform: translateX(-6%);
+    opacity: 0.88;
   }
   50% {
-    transform: translateX(calc(-6% + 10px));
+    opacity: 1;
   }
 }
 

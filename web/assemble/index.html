@@ -55,14 +55,10 @@
           role="dialog"
           aria-label="Drag a card from the palette to the build area"
         >
-          <svg
-            class="drag-coach__arrow"
-            viewBox="0 0 280 120"
-            aria-hidden="true"
-          >
+          <svg class="drag-coach__arrow" aria-hidden="true">
             <path
               class="drag-coach__path"
-              d="M36 62 C 100 22, 145 22, 188 58"
+              id="drag-coach-path"
               fill="none"
               stroke="currentColor"
               stroke-width="10"
@@ -70,7 +66,7 @@
             />
             <path
               class="drag-coach__head"
-              d="M168 36 L204 62 L164 80"
+              id="drag-coach-head"
               fill="none"
               stroke="currentColor"
               stroke-width="10"
