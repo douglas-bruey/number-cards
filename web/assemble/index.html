@@ -45,11 +45,40 @@
 
       <section id="play-screen" class="screen" hidden>
         <div class="assemble-layout">
-          <aside class="panel assemble-palette" aria-label="Palette cards 1 to 8">
-            <h2 class="assemble-label">Palette</h2>
-            <p class="assemble-hint">Drag onto the build area. Space rotates.</p>
-            <div class="palette-grid" id="palette"></div>
-          </aside>
+          <div class="assemble-side">
+            <aside
+              class="panel assemble-palette"
+              aria-label="Palette cards 1 to 8"
+            >
+              <div class="palette-grid" id="palette"></div>
+            </aside>
+
+            <div class="space-hint" id="space-hint" hidden aria-hidden="true">
+              <span class="space-hint__label">space bar</span>
+              <svg
+                class="space-hint__icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M21 3v5h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
 
           <div class="assemble-main">
             <div class="panel assemble-board">
@@ -86,32 +115,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div class="space-hint" id="space-hint" hidden aria-hidden="true">
-              <span class="space-hint__label">space bar</span>
-              <svg
-                class="space-hint__icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M21 3v5h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
             </div>
 
             <section class="deck-tray" aria-label="Challenge deck progress">

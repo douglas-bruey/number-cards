@@ -586,9 +586,16 @@ a {
     align-items: start;
   }
 
-  .assemble-layout > .assemble-main {
+  .assemble-layout > .assemble-main,
+  .assemble-layout > .assemble-side {
     min-width: 0;
   }
+}
+
+.assemble-side {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
 }
 
 .assemble-label {
@@ -596,12 +603,6 @@ a {
   font-family: var(--font-display);
   font-size: 1.05rem;
   letter-spacing: -0.02em;
-}
-
-.assemble-hint {
-  margin: 0.35rem 0 0.85rem;
-  color: var(--ink-soft);
-  font-size: 0.9rem;
 }
 
 .palette-grid {
@@ -692,8 +693,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
-  justify-self: center;
-  width: min(320px, 70%);
+  width: 100%;
   height: 2.65rem;
   padding: 0 1.1rem;
   border-radius: 0.85rem;
