@@ -86,25 +86,37 @@ export function cardValue(name) {
 }
 
 /**
- * Build an SVG element for a card.
- * @param {string} name Deck key
- * @param {{ className?: string }} [options]
+ * Filled dots for a named card, each keeping that card's number colour.
+ * @param {string} name
+ * @returns {Record<string, string>} letter → colour
  */
-export function renderCard(name, options = {}) {
+export function cardDots(name) {
   const filled = DECK[name];
   if (filled === undefined) {
     throw new Error(`Unknown card: ${name}`);
   }
-
   const value = cardValue(name);
-  const fillColor = value > 0 ? NUMBER_COLORS[value] : null;
-  const filledSet = new Set(filled);
+  const color = value > 0 ? NUMBER_COLORS[value] : null;
+  /** @type {Record<string, string>} */
+  const dots = {};
+  for (const letter of filled) {
+    dots[letter] = color;
+  }
+  return dots;
+}
 
+/**
+ * Build an SVG from a letter→colour map (empty map = blank card face).
+ * @param {Record<string, string>} dots
+ * @param {{ className?: string, label?: string }} [options]
+ */
+export function renderDots(dots, options = {}) {
+  const count = Object.keys(dots).length;
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", `0 0 ${CARD.size} ${CARD.size}`);
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", `Card showing ${value}`);
+  svg.setAttribute("aria-label", options.label ?? `Card with ${count} dots`);
   if (options.className) {
     svg.setAttribute("class", options.className);
   }
@@ -126,9 +138,9 @@ export function renderCard(name, options = {}) {
     circle.setAttribute("cy", String(y));
     circle.setAttribute("r", String(CARD.circleRadius));
 
-    if (filledSet.has(letter)) {
+    if (Object.prototype.hasOwnProperty.call(dots, letter)) {
       circle.setAttribute("class", "card-dot card-dot--filled");
-      circle.setAttribute("fill", fillColor);
+      circle.setAttribute("fill", dots[letter]);
     } else {
       circle.setAttribute("class", "card-dot card-dot--hole");
     }
@@ -138,6 +150,75 @@ export function renderCard(name, options = {}) {
   return svg;
 }
 
+/**
+ * Build an SVG element for a named deck card.
+ * @param {string} name Deck key
+ * @param {{ className?: string }} [options]
+ */
+export function renderCard(name, options = {}) {
+  const value = cardValue(name);
+  return renderDots(cardDots(name), {
+    className: options.className,
+    label: `Card showing ${value}`,
+  });
+}
+
 export function deckNames() {
   return Object.keys(DECK);
+}
+
+/** True when two letter→colour maps cover the same positions. */
+export function samePattern(a, b) {
+  const keysA = Object.keys(a).sort().join("");
+  const keysB = Object.keys(b).sort().join("");
+  return keysA === keysB;
+}
+
+/** Merge dots if no shared letters; otherwise return null. */
+export function tryMergeDots(base, addition) {
+  for (const letter of Object.keys(addition)) {
+    if (Object.prototype.hasOwnProperty.call(base, letter)) {
+      return null;
+    }
+  }
+  return { ...base, ...addition };
+}
+
+/**
+ * Clockwise 90° letter map for the diamond grid (e stays put):
+ * a→f→i→d→a, b→c→h→g→b.
+ */
+export const ROTATE_CW = {
+  a: "f",
+  b: "c",
+  c: "h",
+  d: "a",
+  e: "e",
+  f: "i",
+  g: "b",
+  h: "g",
+  i: "d",
+};
+
+/** Rotate a letter→colour map clockwise by `turns` quarter-turns (0–3). */
+export function rotateDots(dots, turns) {
+  const n = ((turns % 4) + 4) % 4;
+  let current = { ...dots };
+  for (let i = 0; i < n; i += 1) {
+    /** @type {Record<string, string>} */
+    const next = {};
+    for (const [letter, color] of Object.entries(current)) {
+      next[ROTATE_CW[letter]] = color;
+    }
+    current = next;
+  }
+  return current;
+}
+
+/** Palette cards: every deck card valued 1–8. */
+export function paletteNames() {
+  return deckNames().filter((name) => {
+    const value = cardValue(name);
+    return value >= 1 && value <= 8;
+  });
 }

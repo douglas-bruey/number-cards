@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assemble · Number Cards</title>
+    <meta
+      name="description"
+      content="Build target number cards by stacking palette cards without overlapping dots."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Outfit:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <main class="site-shell">
+      <header class="page-header">
+        <p class="brand"><a href="../">Number Cards</a></p>
+        <a class="back-link" href="../">← All games</a>
+      </header>
+
+      <section id="start-screen" class="screen panel">
+        <h1>Assemble</h1>
+        <p>
+          Stack cards from the palette onto the build area to match the target
+          pattern. Dots keep their colours — and may not overlap.
+        </p>
+        <ul class="rules">
+          <li>Drag a palette card (1–8) onto the build area.</li>
+          <li>
+            While dragging, press <strong>Space</strong> to rotate 90°
+            clockwise.
+          </li>
+          <li>Overlapping dots bounce the card back to the palette.</li>
+          <li>Match the target to clear it. Clear the whole deck to win.</li>
+        </ul>
+        <div class="start-actions">
+          <button type="button" class="btn" id="start-btn">Start</button>
+        </div>
+      </section>
+
+      <section id="play-screen" class="screen" hidden>
+        <div class="assemble-layout">
+          <aside class="panel assemble-palette" aria-label="Palette cards 1 to 8">
+            <h2 class="assemble-label">Palette</h2>
+            <p class="assemble-hint">Drag onto the build area. Space rotates.</p>
+            <div class="palette-grid" id="palette"></div>
+          </aside>
+
+          <div class="panel assemble-board">
+            <div class="assemble-status">
+              <p class="hud__stat">
+                Targets left<br />
+                <strong id="remaining-count">11</strong>
+              </p>
+              <p class="feedback" id="feedback" aria-live="assertive"></p>
+              <button type="button" class="btn btn--quiet" id="clear-btn">
+                Clear build
+              </button>
+            </div>
+
+            <div class="assemble-cards">
+              <div class="assemble-slot">
+                <h2 class="assemble-label">Build</h2>
+                <div
+                  class="card-slot"
+                  id="build-slot"
+                  data-drop="build"
+                  aria-label="Build drop target"
+                >
+                  <div class="card-slot__mount" id="build-mount"></div>
+                </div>
+              </div>
+              <div class="assemble-slot">
+                <h2 class="assemble-label">Target</h2>
+                <div class="card-slot card-slot--target" aria-label="Target card">
+                  <div class="card-slot__mount" id="target-mount"></div>
+                </div>
+                <p class="assemble-target-name" id="target-name"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="win-screen" class="screen panel" hidden>
+        <h1>Deck cleared</h1>
+        <p>You built every target pattern. Nice stacking.</p>
+        <div class="win-actions">
+          <button type="button" class="btn" id="again-btn">Play again</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="../js/assemble.js"></script>
+  </body>
+</html>

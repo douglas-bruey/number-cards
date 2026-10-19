@@ -560,6 +560,206 @@ a {
   margin-top: 0.35rem;
 }
 
+.btn--quiet {
+  background: transparent;
+  color: var(--sea);
+  border: 1px solid rgba(15, 110, 106, 0.35);
+  box-shadow: none;
+}
+
+.btn--quiet:hover,
+.btn--quiet:focus-visible {
+  background: rgba(15, 110, 106, 0.08);
+  color: var(--sea);
+}
+
+.assemble-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 960px) {
+  .assemble-layout {
+    grid-template-columns: minmax(200px, 0.85fr) minmax(0, 1.6fr);
+    align-items: start;
+  }
+}
+
+.assemble-label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.assemble-hint {
+  margin: 0.35rem 0 0.85rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.palette-card {
+  appearance: none;
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  padding: 0.4rem;
+  border: 1px solid rgba(26, 42, 50, 0.1);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.78);
+  cursor: grab;
+  touch-action: none;
+}
+
+.palette-card:hover:not(:disabled),
+.palette-card:focus-visible:not(:disabled) {
+  border-color: rgba(15, 110, 106, 0.45);
+  outline: none;
+}
+
+.palette-card:disabled,
+.palette-card.is-used {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.palette-card.is-dragging {
+  opacity: 0.25;
+}
+
+.palette-card__svg {
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.palette-card__tag {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.assemble-board {
+  display: grid;
+  gap: 1rem;
+}
+
+.assemble-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assemble-status .feedback {
+  flex: 1 1 12rem;
+  text-align: left;
+  min-height: 1.35rem;
+}
+
+.assemble-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
+}
+
+.assemble-slot {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+.card-slot {
+  width: min(280px, 100%);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0.65rem;
+  border-radius: 1.1rem;
+  border: 2px dashed rgba(26, 42, 50, 0.18);
+  background: rgba(255, 255, 255, 0.45);
+  transition:
+    border-color 160ms var(--ease-out),
+    background 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.card-slot--target {
+  border-style: solid;
+  border-color: rgba(15, 110, 106, 0.28);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.card-slot.is-hot {
+  border-color: rgba(15, 110, 106, 0.65);
+  background: rgba(20, 145, 139, 0.12);
+}
+
+.card-slot.is-reject {
+  border-color: rgba(201, 42, 42, 0.65);
+  animation: shake-miss 420ms var(--ease-out);
+}
+
+.card-slot__mount {
+  width: 100%;
+  height: auto;
+}
+
+.card-slot__mount .play-card {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.assemble-target-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  width: min(200px, 42vw);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.drag-ghost.is-returning {
+  transition: transform 280ms var(--ease-out);
+}
+
+.drag-ghost__card {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 24px rgba(26, 42, 50, 0.22));
+  transform-origin: center center;
+  transition: transform 160ms var(--ease-out);
+}
+
+/* See through the face so dots already on the build stay visible. */
+.drag-ghost__card .card-face {
+  fill: rgba(255, 254, 248, 0.32);
+}
+
+.drag-ghost__card .card-dot--hole {
+  fill: rgba(255, 254, 248, 0.12);
+  stroke: rgba(26, 42, 50, 0.2);
+  stroke-width: 1;
+}
+
 @keyframes float-card {
   from {
     transform: translateY(0) rotate(-2deg);
