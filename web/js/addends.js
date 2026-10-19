@@ -692,13 +692,14 @@ function tryAcceptDrop(row, active) {
 
   const values = nextStacked.map((name) => cardValue(name));
   const key = pairKey(values[0], values[1]);
-  const expectedKey = pairKey(row.values[0], row.values[1]);
-  if (key !== expectedKey) {
-    // Pattern matched a different partition than this row expects.
-    return { ok: false, reason: "partition" };
-  }
-  if (claimedPairs().has(key)) {
-    return { ok: false, reason: "duplicate" };
+  // Pair must be valid for this row's target pattern and not already used.
+  const allowed = partitions.some(
+    (partition) =>
+      partition.target === row.target &&
+      pairKey(partition.values[0], partition.values[1]) === key,
+  );
+  if (!allowed || claimedPairs().has(key)) {
+    return { ok: false, reason: allowed ? "duplicate" : "partition" };
   }
 
   row.stacked = nextStacked;
