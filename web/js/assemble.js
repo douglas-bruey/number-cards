@@ -118,7 +118,7 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    if (!available.has(name)) {
+    if (!available.has(name) || name === currentTarget) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
@@ -148,7 +148,7 @@ function presentTarget() {
   clearBuild({ silent: true });
   renderTarget();
   updateHud();
-  setFeedback(`Build ${currentTarget}`, "");
+  setFeedback("Match the target", "");
 }
 
 function clearBuild({ silent = false } = {}) {
@@ -184,9 +184,8 @@ function checkMatch() {
   if (!samePattern(built, target)) {
     return;
   }
-  const cleared = currentTarget;
   remainingTargets.shift();
-  setFeedback(`${cleared} matched — nice`, "hit");
+  setFeedback("Matched — nice", "hit");
   window.setTimeout(() => {
     presentTarget();
   }, 650);
@@ -301,7 +300,7 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
     active.ghost.remove();
     renderBuild();
     renderPalette();
-    setFeedback(`Placed ${active.name}`, "hit");
+    setFeedback("", "");
     checkMatch();
     return;
   }
