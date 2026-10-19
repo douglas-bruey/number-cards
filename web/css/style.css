@@ -712,13 +712,6 @@ a {
   display: block;
 }
 
-.assemble-target-name {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
 .drag-ghost {
   position: fixed;
   top: 0;

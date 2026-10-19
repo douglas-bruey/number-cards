@@ -34,7 +34,6 @@ const els = {
   buildSlot: document.getElementById("build-slot"),
   buildMount: document.getElementById("build-mount"),
   targetMount: document.getElementById("target-mount"),
-  targetName: document.getElementById("target-name"),
   remaining: document.getElementById("remaining-count"),
   feedback: document.getElementById("feedback"),
 };
@@ -104,13 +103,11 @@ function renderBuild() {
 function renderTarget() {
   if (!currentTarget) {
     els.targetMount.replaceChildren();
-    els.targetName.textContent = "";
     return;
   }
   els.targetMount.replaceChildren(
     renderCard(currentTarget, { className: "play-card" }),
   );
-  els.targetName.textContent = currentTarget;
 }
 
 function renderPalette() {
