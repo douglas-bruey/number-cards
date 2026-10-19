@@ -34,7 +34,6 @@ const els = {
   buildSlot: document.getElementById("build-slot"),
   buildMount: document.getElementById("build-mount"),
   targetMount: document.getElementById("target-mount"),
-  remaining: document.getElementById("remaining-count"),
   feedback: document.getElementById("feedback"),
   spaceHint: document.getElementById("space-hint"),
   pendingGrid: document.getElementById("pending-grid"),
@@ -139,14 +138,6 @@ function renderPalette() {
   }
 }
 
-function targetsLeft() {
-  return pendingTargets.length + (currentTarget ? 1 : 0);
-}
-
-function updateHud() {
-  els.remaining.textContent = String(targetsLeft());
-}
-
 function renderDeckCard(name, className = "deck-card") {
   const item = document.createElement("div");
   item.className = className;
@@ -169,7 +160,6 @@ function presentTarget() {
   if (!currentTarget && pendingTargets.length === 0) {
     clearBuild({ silent: true });
     renderDeckRows();
-    updateHud();
     showScreen("win");
     return;
   }
@@ -182,7 +172,6 @@ function presentTarget() {
   renderTarget();
   renderDeckRows();
   renderPalette();
-  updateHud();
   setFeedback("Match the target", "");
 }
 
@@ -203,7 +192,6 @@ function resetGame() {
   clearBuild({ silent: true });
   renderTarget();
   renderDeckRows();
-  updateHud();
 }
 
 function startGame() {
@@ -225,7 +213,6 @@ function checkMatch() {
   currentTarget = null;
   renderTarget();
   renderDeckRows();
-  updateHud();
   setFeedback("Matched — nice", "hit");
   window.setTimeout(() => {
     presentTarget();

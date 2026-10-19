@@ -671,6 +671,7 @@ a {
 
 .assemble-status .feedback {
   flex: 1 1 12rem;
+  margin: 0;
   text-align: left;
   min-height: 1.35rem;
 }
