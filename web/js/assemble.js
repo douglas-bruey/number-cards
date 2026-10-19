@@ -34,7 +34,6 @@ const els = {
   buildSlot: document.getElementById("build-slot"),
   buildMount: document.getElementById("build-mount"),
   targetMount: document.getElementById("target-mount"),
-  feedback: document.getElementById("feedback"),
   spaceHint: document.getElementById("space-hint"),
   pendingGrid: document.getElementById("pending-grid"),
   completedGrid: document.getElementById("completed-grid"),
@@ -69,11 +68,6 @@ function showScreen(name) {
   els.startScreen.hidden = name !== "start";
   els.playScreen.hidden = name !== "play";
   els.winScreen.hidden = name !== "win";
-}
-
-function setFeedback(message, state = "") {
-  els.feedback.textContent = message;
-  els.feedback.dataset.state = state;
 }
 
 function buildDotsFromStack() {
@@ -160,7 +154,7 @@ function renderDeckRows() {
 
 function presentTarget() {
   if (!currentTarget && pendingTargets.length === 0) {
-    clearBuild({ silent: true });
+    clearBuild();
     renderDeckRows();
     showScreen("win");
     return;
@@ -170,28 +164,24 @@ function presentTarget() {
     currentTarget = pendingTargets.shift() ?? null;
   }
 
-  clearBuild({ silent: true });
+  clearBuild();
   renderTarget();
   renderDeckRows();
   renderPalette();
-  setFeedback("Match the target", "");
 }
 
-function clearBuild({ silent = false } = {}) {
+function clearBuild() {
   stacked = [];
   stackedTurns = [];
   renderBuild();
   renderPalette();
-  if (!silent) {
-    setFeedback("Build cleared", "");
-  }
 }
 
 function resetGame() {
   pendingTargets = shuffle([...TARGET_DECK]);
   completedTargets = [];
   currentTarget = null;
-  clearBuild({ silent: true });
+  clearBuild();
   renderTarget();
   renderDeckRows();
 }
@@ -215,7 +205,6 @@ function checkMatch() {
   currentTarget = null;
   renderTarget();
   renderDeckRows();
-  setFeedback("Matched — nice", "hit");
   window.setTimeout(() => {
     presentTarget();
   }, 650);
@@ -258,7 +247,6 @@ function beginDrag(name, originEl, event) {
   moveGhost(event.clientX, event.clientY);
   updateGhostTransform();
   els.spaceHint.hidden = false;
-  setFeedback("", "");
 }
 
 function updateGhostTransform() {
@@ -320,7 +308,6 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
     const merged = tryMergeDots(buildDotsFromStack(), addition);
     if (!merged) {
       els.buildSlot.classList.add("is-reject");
-      setFeedback("Dots overlap — try another spot or rotation", "miss");
       window.setTimeout(() => els.buildSlot.classList.remove("is-reject"), 400);
       flyGhostHome(active, () => {});
       return;
@@ -330,7 +317,6 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
     stackedTurns.push(active.turns);
     active.ghost.remove();
     renderBuild();
-    setFeedback("", "");
     checkMatch();
     return;
   }
