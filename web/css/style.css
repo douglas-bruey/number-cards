@@ -642,6 +642,16 @@ a {
   .assemble-layout > .assemble-side {
     min-width: 0;
   }
+
+  /* Keep the palette in view while the board/rows scroll. */
+  .assemble-side {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 .assemble-side {
