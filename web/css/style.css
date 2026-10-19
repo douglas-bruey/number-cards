@@ -404,8 +404,10 @@ a {
 
 .card-face {
   fill: #fffef8;
-  stroke: rgba(26, 42, 50, 0.55);
-  stroke-width: 1.4;
+  stroke: rgba(26, 42, 50, 0.72);
+  /* stroke-width is set on the SVG element to match the inset geometry */
+  stroke-linejoin: round;
+  shape-rendering: geometricPrecision;
 }
 
 .card-dot--hole {
@@ -608,18 +610,22 @@ a {
   appearance: none;
   display: grid;
   justify-items: center;
-  padding: 0.35rem;
-  border: 1px solid rgba(26, 42, 50, 0.1);
+  padding: 0.2rem;
+  border: 0;
   border-radius: 0.85rem;
-  background: rgba(255, 255, 255, 0.78);
+  background: transparent;
   cursor: grab;
   touch-action: none;
 }
 
 .palette-card:hover:not(:disabled),
 .palette-card:focus-visible:not(:disabled) {
-  border-color: rgba(15, 110, 106, 0.45);
   outline: none;
+}
+
+.palette-card:hover:not(:disabled) .card-face,
+.palette-card:focus-visible:not(:disabled) .card-face {
+  stroke: rgba(15, 110, 106, 0.85);
 }
 
 .palette-card:disabled,
@@ -635,6 +641,7 @@ a {
 .palette-card__svg {
   width: 100%;
   height: auto;
+  overflow: visible;
   pointer-events: none;
 }
 

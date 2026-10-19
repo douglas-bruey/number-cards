@@ -42,6 +42,9 @@ const CARD = {
   cornerRadius: 10,
   circleRadius: 10,
   gridSpacing: 30,
+  // Keep the outline fully inside the viewBox so strokes are not clipped
+  // (clipping reads as uneven / missing borders when the SVG is scaled).
+  strokeWidth: 2.5,
 };
 
 /**
@@ -121,14 +124,16 @@ export function renderDots(dots, options = {}) {
     svg.setAttribute("class", options.className);
   }
 
+  const inset = CARD.strokeWidth / 2;
   const face = document.createElementNS(ns, "rect");
-  face.setAttribute("x", "0");
-  face.setAttribute("y", "0");
-  face.setAttribute("width", String(CARD.size));
-  face.setAttribute("height", String(CARD.size));
+  face.setAttribute("x", String(inset));
+  face.setAttribute("y", String(inset));
+  face.setAttribute("width", String(CARD.size - CARD.strokeWidth));
+  face.setAttribute("height", String(CARD.size - CARD.strokeWidth));
   face.setAttribute("rx", String(CARD.cornerRadius));
   face.setAttribute("ry", String(CARD.cornerRadius));
   face.setAttribute("class", "card-face");
+  face.setAttribute("stroke-width", String(CARD.strokeWidth));
   svg.appendChild(face);
 
   for (const letter of CIRCLE_LETTERS) {
