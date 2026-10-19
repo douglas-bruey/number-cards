@@ -407,6 +407,17 @@ function createRow(index, partition) {
 }
 
 function renderRows() {
+  const count = partitions.length;
+  if (els.prompt) {
+    if (count > 1) {
+      els.prompt.hidden = false;
+      els.prompt.textContent = `Build the target card ${count} different ways`;
+    } else {
+      els.prompt.hidden = true;
+      els.prompt.textContent = "";
+    }
+  }
+
   els.rows.replaceChildren();
   rows = partitions.map((partition, index) => {
     const row = createRow(index, partition);
