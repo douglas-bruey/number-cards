@@ -341,9 +341,8 @@ a {
 }
 
 .card-dot--hole {
-  fill: #d7e0db;
-  stroke: rgba(26, 42, 50, 0.28);
-  stroke-width: 1;
+  fill: #fffef8;
+  stroke: none;
 }
 
 .card-dot--filled {
