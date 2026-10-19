@@ -737,6 +737,10 @@ a {
   border-color: rgba(15, 110, 106, 0.28);
 }
 
+.addends-row .card-slot {
+  width: min(220px, 100%);
+}
+
 .assemble-board {
   display: grid;
   gap: 1rem;
