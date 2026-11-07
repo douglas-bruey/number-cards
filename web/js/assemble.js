@@ -66,6 +66,12 @@ let dragCoachTimer = null;
 
 /** @type {{ name: string, turns: number, originEl: HTMLElement, ghost: HTMLElement, offsetX: number, offsetY: number, pointerId: number } | null} */
 let drag = null;
+/** Second-finger tap candidate used to rotate while dragging on touch. */
+/** @type {{ pointerId: number, x: number, y: number, at: number } | null} */
+let rotateTap = null;
+
+const ROTATE_TAP_MAX_MS = 350;
+const ROTATE_TAP_MAX_MOVE_PX = 16;
 
 function shuffle(items) {
   const copy = [...items];
@@ -544,6 +550,24 @@ function updateGhostTransform() {
   }
 }
 
+function rotateDragCard() {
+  if (!drag) {
+    return;
+  }
+  drag.turns = (drag.turns + 1) % 4;
+  updateGhostTransform();
+}
+
+function isRotateTap(pointer, clientX, clientY) {
+  const elapsed = performance.now() - pointer.at;
+  const dx = clientX - pointer.x;
+  const dy = clientY - pointer.y;
+  return (
+    elapsed <= ROTATE_TAP_MAX_MS &&
+    dx * dx + dy * dy <= ROTATE_TAP_MAX_MOVE_PX * ROTATE_TAP_MAX_MOVE_PX
+  );
+}
+
 function moveGhost(clientX, clientY) {
   if (!drag) {
     return;
@@ -584,6 +608,7 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
   }
   const active = drag;
   drag = null;
+  rotateTap = null;
   els.spaceHint.hidden = true;
   const tryDrop = !cancelled && overBuildSlot(clientX, clientY);
   active.originEl.classList.remove("is-dragging");
@@ -609,7 +634,27 @@ function endDrag(clientX, clientY, { cancelled = false } = {}) {
   flyGhostHome(active, () => {});
 }
 
+function onPointerDown(event) {
+  if (!drag || event.pointerId === drag.pointerId) {
+    return;
+  }
+  // A second finger/pointer while dragging: treat as a rotate-tap candidate.
+  event.preventDefault();
+  rotateTap = {
+    pointerId: event.pointerId,
+    x: event.clientX,
+    y: event.clientY,
+    at: performance.now(),
+  };
+}
+
 function onPointerMove(event) {
+  if (rotateTap && event.pointerId === rotateTap.pointerId) {
+    if (!isRotateTap(rotateTap, event.clientX, event.clientY)) {
+      rotateTap = null;
+    }
+    return;
+  }
   if (!drag || event.pointerId !== drag.pointerId) {
     return;
   }
@@ -621,6 +666,14 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
+  if (rotateTap && event.pointerId === rotateTap.pointerId) {
+    const tap = rotateTap;
+    rotateTap = null;
+    if (drag && isRotateTap(tap, event.clientX, event.clientY)) {
+      rotateDragCard();
+    }
+    return;
+  }
   if (!drag || event.pointerId !== drag.pointerId) {
     return;
   }
@@ -634,8 +687,7 @@ function onKeyDown(event) {
   }
   if (event.code === "Space" || event.key === " ") {
     event.preventDefault();
-    drag.turns = (drag.turns + 1) % 4;
-    updateGhostTransform();
+    rotateDragCard();
   } else if (event.key === "Escape") {
     event.preventDefault();
     els.buildSlot.classList.remove("is-hot");
@@ -643,6 +695,7 @@ function onKeyDown(event) {
   }
 }
 
+document.addEventListener("pointerdown", onPointerDown, { passive: false });
 document.addEventListener("pointermove", onPointerMove);
 document.addEventListener("pointerup", onPointerUp);
 document.addEventListener("pointercancel", onPointerUp);
