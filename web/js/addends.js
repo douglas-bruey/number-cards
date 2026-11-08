@@ -441,8 +441,14 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    const lockedTargets = new Set(currentChallenge?.cards ?? []);
-    if (anyVerifying || lockedTargets.has(name)) {
+    // Locked while verifying, or when the card has as many or more dots
+    // than the current challenge target (same rule as Assemble).
+    const targetValue =
+      currentChallenge?.cards?.length > 0
+        ? cardValue(currentChallenge.cards[0])
+        : null;
+    const tooLarge = targetValue !== null && cardValue(name) >= targetValue;
+    if (anyVerifying || tooLarge) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
