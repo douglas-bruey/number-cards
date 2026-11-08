@@ -139,8 +139,12 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    // Locked while verifying, or when this card matches the current target.
-    if (verifying || name === currentTarget) {
+    // Locked while verifying, or when the card has as many or more dots
+    // than the target (it can't help build a smaller-or-equal pattern).
+    const tooLarge =
+      currentTarget !== null &&
+      cardValue(name) >= cardValue(currentTarget);
+    if (verifying || tooLarge) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
