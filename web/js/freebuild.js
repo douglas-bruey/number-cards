@@ -9,7 +9,7 @@ import {
   tryMergeDots,
 } from "./cards.js";
 
-/** Challenge deck: targets players must assemble freely. */
+/** Challenge deck: targets players must free-build. */
 const TARGET_DECK = [
   "2.2",
   "3.2",
@@ -36,6 +36,9 @@ const els = {
   spaceHint: document.getElementById("space-hint"),
   pendingGrid: document.getElementById("pending-grid"),
   completedGrid: document.getElementById("completed-grid"),
+  equationBuild: document.getElementById("equation-build"),
+  equationTarget: document.getElementById("equation-target"),
+  equationTargetInput: document.getElementById("equation-target-input"),
   assembleBoard: document.querySelector(".assemble-board"),
   dragCoach: document.getElementById("drag-coach"),
   dragCoachPath: document.getElementById("drag-coach-path"),
@@ -43,23 +46,27 @@ const els = {
   assemblePalette: document.querySelector(".assemble-palette"),
 };
 
+/** Cards still waiting to be drawn into the target slot. */
 /** @type {string[]} */
 let pendingTargets = [];
+/** Cards successfully built. */
 /** @type {string[]} */
 let completedTargets = [];
 /** @type {string | null} */
 let currentTarget = null;
-/** @type {string[]} */
+/** @type {string[]} cards currently stacked in the build area */
 let stacked = [];
-/** @type {number[]} */
+/** @type {number[]} quarter-turns for each stacked card */
 let stackedTurns = [];
-/** True while a matched build is pulsing before advancing. */
-let completing = false;
+/** True while the player is filling in card values after a pattern match. */
+let verifying = false;
+let equationSolved = false;
 /** @type {number | null} */
 let dragCoachTimer = null;
 
 /** @type {{ name: string, turns: number, originEl: HTMLElement, ghost: HTMLElement, offsetX: number, offsetY: number, pointerId: number } | null} */
 let drag = null;
+/** Second-finger tap candidate used to rotate while dragging on touch. */
 /** @type {{ pointerId: number, x: number, y: number, at: number } | null} */
 let rotateTap = null;
 
@@ -111,7 +118,7 @@ function renderBuild() {
   );
   const empty = stacked.length === 0;
   els.buildSlot.classList.toggle("is-empty", empty);
-  els.clearBtn.hidden = empty || completing;
+  els.clearBtn.hidden = empty || verifying;
 }
 
 function renderTarget() {
@@ -132,9 +139,12 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
+    // Locked while verifying, or when the card has as many or more dots
+    // than the target (it can't help build a smaller-or-equal pattern).
     const tooLarge =
-      currentTarget !== null && cardValue(name) >= cardValue(currentTarget);
-    if (completing || tooLarge) {
+      currentTarget !== null &&
+      cardValue(name) >= cardValue(currentTarget);
+    if (verifying || tooLarge) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
@@ -149,13 +159,194 @@ function renderPalette() {
   }
 }
 
-function clearSuccessPulse() {
-  completing = false;
+function makeDigitInput(ariaLabel) {
+  const input = document.createElement("input");
+  input.className = "equation-digit";
+  input.type = "text";
+  input.inputMode = "numeric";
+  input.maxLength = 1;
+  input.autocomplete = "off";
+  input.pattern = "[0-9]";
+  input.setAttribute("aria-label", ariaLabel);
+  input.addEventListener("beforeinput", (event) => {
+    if (event.data && !/^[0-9]$/.test(event.data)) {
+      event.preventDefault();
+    }
+  });
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D/g, "").slice(0, 1);
+    onEquationInput(input);
+  });
+  return input;
+}
+
+function hideEquation() {
+  verifying = false;
+  equationSolved = false;
+  els.equationBuild.hidden = true;
+  els.equationTarget.hidden = true;
+  els.equationBuild.replaceChildren();
+  els.equationTargetInput.value = "";
+  els.equationTargetInput.disabled = false;
+  els.equationTargetInput.classList.remove("is-correct", "is-wrong");
   els.assembleBoard?.classList.remove("is-equation-success");
   els.buildSlot.classList.remove("is-equation-success");
   document
     .querySelector(".card-slot--target")
     ?.classList.remove("is-equation-success");
+}
+
+function expectedBuildValues() {
+  return stacked.map((name) => String(cardValue(name)));
+}
+
+/** True when `entered` is a sub-multiset of `expected`. */
+function isSubMultiset(entered, expected) {
+  const pool = [...expected];
+  for (const value of entered) {
+    const idx = pool.indexOf(value);
+    if (idx === -1) {
+      return false;
+    }
+    pool.splice(idx, 1);
+  }
+  return true;
+}
+
+function showEquation() {
+  verifying = true;
+  equationSolved = false;
+  els.equationBuild.replaceChildren();
+
+  stacked.forEach((_, index) => {
+    if (index > 0) {
+      const plus = document.createElement("span");
+      plus.className = "equation-op";
+      plus.textContent = "+";
+      plus.setAttribute("aria-hidden", "true");
+      els.equationBuild.appendChild(plus);
+    }
+    const input = makeDigitInput(`Addend ${index + 1}`);
+    els.equationBuild.appendChild(input);
+  });
+
+  els.equationTargetInput.dataset.expected = String(cardValue(currentTarget));
+  els.equationTargetInput.value = "";
+  els.equationTargetInput.disabled = false;
+  els.equationTargetInput.classList.remove("is-correct", "is-wrong");
+
+  els.equationBuild.hidden = false;
+  els.equationTarget.hidden = false;
+  els.clearBtn.hidden = true;
+  renderPalette();
+
+  const first = els.equationBuild.querySelector(".equation-digit");
+  first?.focus();
+}
+
+function buildDigitInputs() {
+  return [...els.equationBuild.querySelectorAll(".equation-digit")];
+}
+
+function equationInputs() {
+  return [...buildDigitInputs(), els.equationTargetInput];
+}
+
+function paintEquationState() {
+  const buildInputs = buildDigitInputs();
+  const expected = expectedBuildValues();
+  const entered = buildInputs
+    .map((input) => input.value)
+    .filter((value) => value !== "");
+
+  const buildOk = isSubMultiset(entered, expected);
+  for (const input of buildInputs) {
+    if (input.value === "") {
+      input.classList.remove("is-correct", "is-wrong");
+    } else if (buildOk) {
+      input.classList.add("is-correct");
+      input.classList.remove("is-wrong");
+    } else {
+      input.classList.add("is-wrong");
+      input.classList.remove("is-correct");
+    }
+  }
+
+  const target = els.equationTargetInput;
+  if (target.value === "") {
+    target.classList.remove("is-correct", "is-wrong");
+  } else if (target.value === target.dataset.expected) {
+    target.classList.add("is-correct");
+    target.classList.remove("is-wrong");
+  } else {
+    target.classList.add("is-wrong");
+    target.classList.remove("is-correct");
+  }
+}
+
+function equationIsCorrect() {
+  const buildInputs = buildDigitInputs();
+  if (buildInputs.some((input) => input.value === "")) {
+    return false;
+  }
+  if (els.equationTargetInput.value === "") {
+    return false;
+  }
+  const entered = buildInputs.map((input) => input.value);
+  const expected = expectedBuildValues();
+  if (entered.length !== expected.length) {
+    return false;
+  }
+  return (
+    isSubMultiset(entered, expected) &&
+    els.equationTargetInput.value === els.equationTargetInput.dataset.expected
+  );
+}
+
+function onEquationInput(current) {
+  if (!verifying || equationSolved) {
+    return;
+  }
+
+  paintEquationState();
+
+  if (current.value !== "" && current.value.length === 1) {
+    const inputs = equationInputs();
+    const idx = inputs.indexOf(current);
+    if (idx >= 0 && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    }
+  }
+
+  if (equationIsCorrect()) {
+    completeEquation();
+  }
+}
+
+function completeEquation() {
+  if (equationSolved || !currentTarget) {
+    return;
+  }
+  equationSolved = true;
+  for (const input of equationInputs()) {
+    input.disabled = true;
+    input.classList.add("is-correct");
+    input.classList.remove("is-wrong");
+  }
+
+  els.assembleBoard?.classList.add("is-equation-success");
+  els.buildSlot.classList.add("is-equation-success");
+  document
+    .querySelector(".card-slot--target")
+    ?.classList.add("is-equation-success");
+
+  const cleared = currentTarget;
+  window.setTimeout(() => {
+    completedTargets.push(cleared);
+    currentTarget = null;
+    hideEquation();
+    presentTarget();
+  }, 2000);
 }
 
 function renderDeckCard(name, className = "deck-card") {
@@ -177,7 +368,7 @@ function renderDeckRows() {
 }
 
 function presentTarget() {
-  clearSuccessPulse();
+  hideEquation();
 
   if (!currentTarget && pendingTargets.length === 0) {
     clearBuild();
@@ -199,7 +390,7 @@ function presentTarget() {
 }
 
 function clearBuild() {
-  if (completing) {
+  if (verifying) {
     return;
   }
   stacked = [];
@@ -212,7 +403,7 @@ function resetGame() {
   pendingTargets = shuffle([...TARGET_DECK]);
   completedTargets = [];
   currentTarget = null;
-  clearSuccessPulse();
+  hideEquation();
   clearBuild();
   renderTarget();
   renderDeckRows();
@@ -279,6 +470,7 @@ function showDragCoach() {
   }
   hideDragCoach();
   els.dragCoach.hidden = false;
+  // Wait a frame so layout is settled after revealing the play screen.
   requestAnimationFrame(() => {
     layoutDragCoachArrow();
     void els.dragCoach.offsetWidth;
@@ -300,31 +492,8 @@ function startGame() {
   showDragCoach();
 }
 
-function completeTarget() {
-  if (completing || !currentTarget) {
-    return;
-  }
-  completing = true;
-  els.clearBtn.hidden = true;
-  renderPalette();
-
-  els.assembleBoard?.classList.add("is-equation-success");
-  els.buildSlot.classList.add("is-equation-success");
-  document
-    .querySelector(".card-slot--target")
-    ?.classList.add("is-equation-success");
-
-  const cleared = currentTarget;
-  window.setTimeout(() => {
-    completedTargets.push(cleared);
-    currentTarget = null;
-    clearSuccessPulse();
-    presentTarget();
-  }, 2000);
-}
-
 function checkMatch() {
-  if (!currentTarget || completing) {
+  if (!currentTarget || verifying) {
     return;
   }
   const built = buildDotsFromStack();
@@ -332,7 +501,7 @@ function checkMatch() {
   if (!samePattern(built, target)) {
     return;
   }
-  completeTarget();
+  showEquation();
 }
 
 /**
@@ -341,7 +510,7 @@ function checkMatch() {
  * @param {PointerEvent} event
  */
 function beginDrag(name, originEl, event) {
-  if (drag || completing || event.button !== 0) {
+  if (drag || verifying || event.button !== 0) {
     return;
   }
   hideDragCoach();
@@ -356,6 +525,7 @@ function beginDrag(name, originEl, event) {
   ghost.appendChild(renderCard(name, { className: "drag-ghost__card" }));
   document.body.appendChild(ghost);
 
+  // Keep the grab point under the cursor after scaling up to build size.
   const scale = ghostSize / Math.max(rect.width, 1);
   drag = {
     name,
@@ -472,6 +642,7 @@ function onPointerDown(event) {
   if (!drag || event.pointerId === drag.pointerId) {
     return;
   }
+  // A second finger/pointer while dragging: treat as a rotate-tap candidate.
   event.preventDefault();
   rotateTap = {
     pointerId: event.pointerId,
@@ -545,6 +716,17 @@ window.addEventListener("resize", () => {
   if (els.dragCoach && !els.dragCoach.hidden) {
     layoutDragCoachArrow();
   }
+});
+els.equationTargetInput.addEventListener("beforeinput", (event) => {
+  if (event.data && !/^[0-9]$/.test(event.data)) {
+    event.preventDefault();
+  }
+});
+els.equationTargetInput.addEventListener("input", () => {
+  els.equationTargetInput.value = els.equationTargetInput.value
+    .replace(/\D/g, "")
+    .slice(0, 1);
+  onEquationInput(els.equationTargetInput);
 });
 
 showScreen("start");

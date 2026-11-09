@@ -40,7 +40,10 @@
             finger to rotate 90° clockwise.
           </li>
           <li>Overlapping dots bounce the card back to the palette.</li>
-          <li>When the build matches the target, that card is completed.</li>
+          <li>
+            After a match, enter the card values (0–9) in any order, then the
+            target.
+          </li>
           <li>Clear the whole deck to win.</li>
         </ul>
         <div class="start-actions">
@@ -166,6 +169,12 @@
                     </button>
                     <div class="card-slot__mount" id="build-mount"></div>
                   </div>
+                  <div
+                    class="equation-build"
+                    id="equation-build"
+                    hidden
+                    aria-label="Enter each build card value"
+                  ></div>
                 </div>
                 <div class="assemble-slot">
                   <h2 class="assemble-label">Target</h2>
@@ -174,6 +183,19 @@
                     aria-label="Target card"
                   >
                     <div class="card-slot__mount" id="target-mount"></div>
+                  </div>
+                  <div class="equation-target" id="equation-target" hidden>
+                    <span class="equation-op" aria-hidden="true">=</span>
+                    <input
+                      class="equation-digit"
+                      id="equation-target-input"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="1"
+                      pattern="[0-9]"
+                      autocomplete="off"
+                      aria-label="Target card value"
+                    />
                   </div>
                 </div>
               </div>
