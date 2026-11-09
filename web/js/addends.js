@@ -432,8 +432,23 @@ function renderRows() {
   });
 }
 
+/** Dot-counts already used in a solved row for the current target. */
+function usedAddendValues() {
+  const values = new Set();
+  for (const row of rows) {
+    if (!row.solved) {
+      continue;
+    }
+    for (const name of row.stacked) {
+      values.add(cardValue(name));
+    }
+  }
+  return values;
+}
+
 function renderPalette() {
   const anyVerifying = rows.some((row) => row.verifying);
+  const usedValues = usedAddendValues();
   els.palette.replaceChildren();
   for (const name of paletteNames()) {
     const btn = document.createElement("button");
@@ -441,14 +456,16 @@ function renderPalette() {
     btn.className = "palette-card";
     btn.dataset.name = name;
     btn.setAttribute("aria-label", `Palette card ${name}`);
-    // Locked while verifying, or when the card has as many or more dots
-    // than the current challenge target (same rule as Assemble).
+    // Locked while verifying, when the card has as many or more dots than
+    // the target, or when that value was already used in a solved answer.
+    const value = cardValue(name);
     const targetValue =
       currentChallenge?.cards?.length > 0
         ? cardValue(currentChallenge.cards[0])
         : null;
-    const tooLarge = targetValue !== null && cardValue(name) >= targetValue;
-    if (anyVerifying || tooLarge) {
+    const tooLarge = targetValue !== null && value >= targetValue;
+    const alreadyUsed = usedValues.has(value);
+    if (anyVerifying || tooLarge || alreadyUsed) {
       btn.disabled = true;
       btn.classList.add("is-used");
     }
